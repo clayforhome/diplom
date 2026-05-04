@@ -1,0 +1,33 @@
+{
+  "$name": "English",
+  "errors": {
+    "error": "Error",
+    "userAlreadyExists": "A user with this email or phone number already exists",
+    "pleaseTryAgain": "Please try again",
+    "failedToStartTest": "Failed to start the test",
+    "initialConfirmationFailed": "Something is wrong with your link, please click the link from the email again",
+    "askSupport": "If the problem persists, please contact support at support{'@'}profroad.kz",
+    "somethingWentWrong": "Something went wrong",
+    "incorrectCode": "Incorrect code",
+    "tooManyIncorrectCodeAttempts": "Too many incorrect code attempts",
+    "confirmationIsNecessary": "Please complete the verification of your email or phone number",
+    "codeSendTimerActive": "Sending a new code is not possible while the timer is active. Wait for the 2-minute timer to expire and try again"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "age": "Age",
+    "phoneNumber": "Phone Number (optional)",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "registrationSuccess": "Registration successful! Redirecting to sign in page...",
+    "registrationFailed": "Registration failed. Check your data and try again",
+    "invalidLoginOrPassword": "Invalid login or password. Please try again"
+  }
+}
