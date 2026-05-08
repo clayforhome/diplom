@@ -60,6 +60,22 @@ public static class ApiErrors
         public override IResult Result => Results.NotFound();
     }
 
+    public class BadRequest : BaseApiError
+    {
+        public static BadRequest Instance { get; } = new();
+        public override int Status => StatusCodes.Status400BadRequest;
+        public override string Code => "bad_request";
+        public override IResult Result => Results.BadRequest();
+    }
+
+    public class Forbidden : BaseApiError
+    {
+        public static Forbidden Instance { get; } = new();
+        public override int Status => StatusCodes.Status403Forbidden;
+        public override string Code => "forbidden";
+        public override IResult Result => Results.Forbid();
+    }
+
     [Obsolete]
     public class UserAlreadyExists : BaseApiError
     {

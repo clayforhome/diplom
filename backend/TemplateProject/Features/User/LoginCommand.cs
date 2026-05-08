@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using TemplateProject.Common;
 using TemplateProject.Settings;
 
 namespace TemplateProject.Features.User;
@@ -22,16 +23,7 @@ public class LoginCommand : IFeatureEndpoint
                 CancellationToken cancellationToken,
                 [FromBody] LoginRequest request) =>
             {
-                var response = await mediator.Send(new Request(request.Login, request.Password), cancellationToken);
-                var status = response.Status;
-                return status switch
-                {
-                    "Ok" => Results.Ok(response),
-                    "Unauthorized" => Results.Unauthorized(),
-                    "Bad Request" => Results.BadRequest(),
-                    "Forbidden" => Results.Forbid(),
-                    _ => Results.BadRequest()
-                };
+                return await mediator.Send(new Request(request.Login, request.Password), cancellationToken);
             })
             .WithName("Login")
             .WithTags("Auth")
@@ -44,26 +36,21 @@ public class LoginCommand : IFeatureEndpoint
         public required string Password {get; set;}
     }
 
-    public class Response
+    public record Request(string Login, string Password) : IRequest<BaseApiResponse<Response>>;
+
+    public record Response
+    {
+        public LoginResponseData Data { get; set; }
+        public string Status { get; set; }
+    }
+
+    public class LoginResponseData
     {
         public required string UserName { get; set; }
         public required string Token { get; set; }
-        public required string Status { get; set; }
     }
 
-    public record Request : IRequest<Response>
-    {
-        [Required(AllowEmptyStrings = false)] public string Login { get; set; }
-        [Required(AllowEmptyStrings = false)] public string Password { get; set; }
-
-        public Request(string login, string password)
-        {
-            Login = login;
-            Password = password;
-        }
-    }
-
-    public class Handler : IRequestHandler<Request, Response>
+    public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
     {
         private readonly SignInManager<Domain.User> _signInManager;
         private readonly AuthSettings _authOptions;
@@ -76,60 +63,43 @@ public class LoginCommand : IFeatureEndpoint
             _authOptions = authSettings.Value;
         }
         
-        public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
+        public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             if (request.Login == "" || request.Password == "")
             {
-                return new Response
-                {
-                    Status = "Bad Request",
-                    UserName = "",
-                    Token = "",
-                };
+                return ApiErrors.BadRequest.Instance;
             }
             
             var user = await _signInManager.UserManager.FindByNameAsync(request.Login);
             
             if (user is null)
             {
-                return new Response
-                {
-                    Status = "Unauthorized",
-                    UserName = "",
-                    Token = "",
-                };
+                return ApiErrors.Unauthorized.Instance;
             }
             
             var checkPasswordResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
 
             if (!checkPasswordResult.Succeeded)
             {
-                return new Response
-                {
-                    Status = "Unauthorized",
-                    UserName = "",
-                    Token = "",
-                };
+                return ApiErrors.Unauthorized.Instance;
             }
 
             var checkEmailConfirmation = await _signInManager.UserManager.IsEmailConfirmedAsync(user);
             
             if (!checkEmailConfirmation)
             {
-                return new Response
-                {
-                    Status = "Forbidden",
-                    UserName = "",
-                    Token = "",
-                };
+                return ApiErrors.Forbidden.Instance;
             }
             
             var roles = await _signInManager.UserManager.GetRolesAsync(user);
             
             var response = new Response
             {
-                UserName = user.Id.ToString(), 
-                Token = GenerateJwtToken(user, roles),
+                Data = new LoginResponseData
+                {
+                    UserName = user.Id.ToString(),
+                    Token = GenerateJwtToken(user, roles)
+                },
                 Status = "Ok"
             };
 

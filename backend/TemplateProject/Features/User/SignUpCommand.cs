@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using TemplateProject.Common;
 using TemplateProject.DataAccess;
 
 namespace TemplateProject.Features.User;
@@ -15,19 +16,14 @@ public class SignUpCommand : IFeatureEndpoint
         endpointRouteBuilder.MapPost("/api/v1/auth/sign-up", async (
                     IMediator mediator,
                     CancellationToken cancellationToken,
-                    [FromBody] SignInRequest request) =>
-                await mediator.Send(new Request(
-                    request.Email,
-                    request.Password,
-                    request.PhoneNumber,
-                    request.Name,
-                    request.Age), cancellationToken))
+                    [FromBody] SignUpModel model) =>
+                await mediator.Send(new Request(model), cancellationToken))
             .WithName("SignUp")
             .WithTags("Auth")
             .WithOpenApi();
     }
 
-    public class SignInRequest
+    public record SignUpModel
     {
         public required string Email { get; set; }
         public required string Password { get; set; }
@@ -36,37 +32,20 @@ public class SignUpCommand : IFeatureEndpoint
         public int Age { get; set; }
     }
 
-    public class Response
+    public record Request(SignUpModel Model) : IRequest<BaseApiResponse<Response>>;
+
+    public record Response
     {
-        public required string Status { get; set; }
-        public IEnumerable<IdentityError> Errors { get; set; } = [];
+        public SignUpResponseData Data { get; set; }
+        public string Status { get; set; }
     }
 
-    public record Request : IRequest<Response>
+    public class SignUpResponseData
     {
-        [Required(AllowEmptyStrings = false)]
-        public string Email { get; set; }
-        [Required(AllowEmptyStrings = false)]
-        public string Password { get; set; }
-        [Required(AllowEmptyStrings = true)]
-        public string? PhoneNumber { get; set; }
-        [Required(AllowEmptyStrings = false)]
-        public string Name { get; set; }
-        [Required(AllowEmptyStrings = false)]
-        public int Age { get; set; }
-        
-
-        public Request(string email, string password, string? phoneNumber, string name, int age)
-        {
-            Email = email;
-            Password = password;
-            PhoneNumber = phoneNumber;
-            Name = name;
-            Age = age;
-        }
+        public string Message { get; set; } = "Sign up successful";
     }
     
-    public class Handler : IRequestHandler<Request, Response>
+    public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
     {
         private readonly UserManager<Domain.User> _userManager;
         private readonly DatabaseContext _context;
@@ -79,29 +58,29 @@ public class SignUpCommand : IFeatureEndpoint
             _context = context;
         }
 
-        public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
+        public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var user = new Domain.User
             {
-                UserName = request.Email,
-                Email = request.Email,
-                PhoneNumber = request.PhoneNumber,
-                Name = request.Name,
-                Age = request.Age,
+                UserName = request.Model.Email,
+                Email = request.Model.Email,
+                PhoneNumber = request.Model.PhoneNumber,
+                Name = request.Model.Name,
+                Age = request.Model.Age,
                 RegistrationDate = _timeProvider.GetUtcNow().UtcDateTime,
-                EmailConfirmed = true // Временная затычка, чтобы не реализовывать подтверждение почты сейчас 
+                EmailConfirmed = true
             };
             
-            var result = await _userManager.CreateAsync(user, request.Password);
+            var result = await _userManager.CreateAsync(user, request.Model.Password);
             
             if (!result.Succeeded)
             {
-                return new Response { Status = "Error", Errors = result.Errors };
+                return ApiErrors.BadRequest.Instance;
             }
             
             await _context.SaveChangesAsync(cancellationToken);
             
-            return new Response { Status = "Ok" };
+            return new Response { Data = new SignUpResponseData(), Status = "Ok" };
         }
     }
 }

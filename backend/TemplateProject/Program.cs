@@ -1,5 +1,4 @@
 using System.Net;
-using AutoMapper;
 using TemplateProject;
 using TemplateProject.DataAccess;
 using TemplateProject.Domain;
@@ -42,10 +41,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(opt =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddAutoMapper(opt =>
-{
-    opt.AddMaps(typeof(Program).Assembly);
-});
 builder.Services.AddMediatR(opt =>
 {
     opt.RegisterServicesFromAssemblyContaining<Program>();
@@ -63,6 +58,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavi
 builder.Services.AddAuthorizationBuilder()
     .AddDefaultPolicy(AuthorizationPolicy.UserPolicy, policy => policy.RequireAuthenticatedUser())
     .AddPolicy(AuthorizationPolicy.OnlyAdminPolicy, policy => policy.RequireRole(Role.Admin))
+    .AddPolicy("AdminOnly", policy => policy.RequireRole(Role.Admin))
     ;
 
 builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"));
@@ -115,8 +111,6 @@ app.UseMiddleware<ExceptionFilterMiddleware>();
 using (var scope = app.Services.CreateScope())
 {
     var serviceProvider = scope.ServiceProvider;
-    var mapper = serviceProvider.GetRequiredService<IMapper>();
-    mapper.ConfigurationProvider.AssertConfigurationIsValid();
     
     var context = serviceProvider.GetRequiredService<DatabaseContext>();
 
@@ -174,22 +168,56 @@ void RegisterFeatureEndpoints(WebApplication webApplication)
 
 async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration configuration, DatabaseContext context)
 {
-    var login = configuration.GetValue<string>("AdminCredentials:Email")!;
-    var password = configuration.GetValue<string>("AdminCredentials:Password")!;
+    var adminLogin = configuration.GetValue<string>("AdminCredentials:Email")!;
+    var adminPassword = configuration.GetValue<string>("AdminCredentials:Password")!;
+    
+    var userLogin = configuration.GetValue<string>("UserCredentials:Email")!;
+    var userPassword = configuration.GetValue<string>("UserCredentials:Password")!;
+    
+    var organizerLogin = configuration.GetValue<string>("OrganizerCredentials:Email")!;
+    var organizerPassword = configuration.GetValue<string>("OrganizerCredentials:Password")!;
     
     var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-    var adminUser = await userManager.FindByEmailAsync(login);
+    var adminUser = await userManager.FindByEmailAsync(adminLogin);
 
     if (adminUser != null)
+    {
+        return;
+    }
+    
+    var userUser = await userManager.FindByEmailAsync(userLogin);
+
+    if (userUser != null)
+    {
+        return;
+    }
+    
+    var organizerUser = await userManager.FindByEmailAsync(organizerLogin);
+
+    if (organizerUser != null)
     {
         return;
     }
 
     adminUser = new User
     {
-        UserName = login,
-        Email = login,
+        UserName = adminLogin,
+        Email = adminLogin,
+        EmailConfirmed = true,
+    };
+    
+    userUser = new User
+    {
+        UserName = userLogin,
+        Email = userLogin,
+        EmailConfirmed = true,
+    };
+    
+    organizerUser = new User
+    {
+        UserName = organizerLogin,
+        Email = organizerLogin,
         EmailConfirmed = true,
     };
 
@@ -203,9 +231,19 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
     {
         Name = Role.User,
     });
+    await roleManager.CreateAsync(new Role
+    {
+        Name = Role.Organizer,
+    });
     
-    await userManager.CreateAsync(adminUser, password);
+    await userManager.CreateAsync(adminUser, adminPassword);
     await userManager.AddToRoleAsync(adminUser, Role.Admin);
+    
+    await userManager.CreateAsync(userUser, userPassword);
+    await userManager.AddToRoleAsync(userUser, Role.User);
+    
+    await userManager.CreateAsync(organizerUser, organizerPassword);
+    await userManager.AddToRoleAsync(organizerUser, Role.Admin);
 
     await tx.CommitAsync();
 }

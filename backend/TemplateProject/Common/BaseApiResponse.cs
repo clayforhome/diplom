@@ -37,9 +37,9 @@ public partial class ErrorOr<T> : OneOfBase<BaseError, T>;
 [GenerateOneOf]
 public partial class ApiErrorOr<T> : OneOfBase<ApiErrors.BaseApiError, T>;
 
-public class ErrorOrNone : ErrorOr<Unit>
+public class ErrorOrNone : ErrorOr<global::MediatR.Unit>
 {
-    public ErrorOrNone(Unit unit) : base(unit)
+    public ErrorOrNone(global::MediatR.Unit unit) : base(unit)
     {
     }
 
@@ -47,7 +47,7 @@ public class ErrorOrNone : ErrorOr<Unit>
     {
     }
 
-    public static implicit operator ErrorOrNone(Unit _) => new(Unit.Value);
+    public static implicit operator ErrorOrNone(global::MediatR.Unit _) => new(global::MediatR.Unit.Value);
 
     public static implicit operator ErrorOrNone(BaseError error) => new(error);
 
@@ -55,9 +55,9 @@ public class ErrorOrNone : ErrorOr<Unit>
     public BaseError Error => AsT0;
 }
 
-public class ApiErrorOrNone : ApiErrorOr<Unit>
+public class ApiErrorOrNone : ApiErrorOr<global::MediatR.Unit>
 {
-    public ApiErrorOrNone(Unit unit) : base(unit)
+    public ApiErrorOrNone(global::MediatR.Unit unit) : base(unit)
     {
     }
 
@@ -65,7 +65,7 @@ public class ApiErrorOrNone : ApiErrorOr<Unit>
     {
     }
 
-    public static implicit operator ApiErrorOrNone(Unit _) => new(Unit.Value);
+    public static implicit operator ApiErrorOrNone(global::MediatR.Unit _) => new(global::MediatR.Unit.Value);
 
     public static implicit operator ApiErrorOrNone(ApiErrors.BaseApiError error) => new(error);
 

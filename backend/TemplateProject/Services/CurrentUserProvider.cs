@@ -21,12 +21,12 @@ public class CurrentUserProvider
         }
         
         var httpContext = _httpContextAccessor.HttpContext;
+        var userId = httpContext?.User.FindFirstValue(JwtClaimTypes.Subject)
+                     ?? httpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        var userId = httpContext?.User.FindFirst(JwtClaimTypes.Subject);
-
-        if (userId?.Value != null)
+        if (!string.IsNullOrWhiteSpace(userId))
         {
-            _currentUserId = Guid.Parse(userId.Value);
+            _currentUserId = Guid.Parse(userId);
             return _currentUserId;
         }
 
