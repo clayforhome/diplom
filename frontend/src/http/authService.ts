@@ -1,5 +1,14 @@
 import { httpClient } from './httpClient';
-import type { CurrentUser, LoginRequest, LoginResponseData, RegisterRequest, RegisterResponseData } from '../types';
+import type {
+  ChangePasswordRequest,
+  CurrentUser,
+  LoginRequest,
+  LoginResponseData,
+  PasswordResponseData,
+  RegisterRequest,
+  RegisterResponseData,
+  ResetPasswordRequest
+} from '../types';
 
 export const authService = {
   login(payload: LoginRequest): Promise<LoginResponseData> {
@@ -10,5 +19,14 @@ export const authService = {
   },
   getCurrentUser(): Promise<CurrentUser> {
     return httpClient.get<CurrentUser>('/user');
+  },
+  changePassword(payload: ChangePasswordRequest): Promise<string> {
+    return httpClient.post<string>('/auth/change-password', payload);
+  },
+  resetPassword(payload: ResetPasswordRequest): Promise<PasswordResponseData> {
+    return httpClient.post<PasswordResponseData>('/auth/reset-password', payload);
+  },
+  logout(): Promise<unknown> {
+    return httpClient.post('/auth/logout');
   }
 };

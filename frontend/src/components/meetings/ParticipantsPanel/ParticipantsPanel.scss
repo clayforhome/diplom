@@ -6,6 +6,7 @@
 
 .participants-panel__header,
 .participants-panel__item,
+.participants-panel__invite,
 .participants-panel__actions,
 .participants-panel__response-actions {
   display: flex;
@@ -37,8 +38,19 @@
   border-top: 1px solid $border-color;
 }
 
+.participants-panel__invite {
+  align-items: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid $border-color;
+}
+
+.participants-panel__invite .input-field {
+  flex: 1 1 auto;
+}
+
 @media (max-width: 720px) {
   .participants-panel__item,
+  .participants-panel__invite,
   .participants-panel__response-actions {
     flex-direction: column;
     align-items: stretch;

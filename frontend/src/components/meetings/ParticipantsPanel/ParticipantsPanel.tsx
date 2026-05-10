@@ -3,6 +3,7 @@ import { Badge } from '../../ui/Badge/Badge';
 import { Button } from '../../ui/Button/Button';
 import { Card } from '../../ui/Card/Card';
 import { Textarea } from '../../ui/Textarea/Textarea';
+import { Input } from '../../ui/Input/Input';
 import type { InvitationStatus, Participant } from '../../../types';
 import { formatDate, formatTime } from '../../../utils/format';
 import './ParticipantsPanel.scss';
@@ -13,10 +14,26 @@ interface ParticipantsPanelProps {
   currentUserId?: string | null;
   onRespond: (status: InvitationStatus, comment?: string) => Promise<void>;
   onRemove?: (userId: string) => Promise<void>;
+  onInvite?: (participantIds: string[]) => Promise<void>;
 }
 
-export function ParticipantsPanel({ participants, canRespond, currentUserId, onRespond, onRemove }: ParticipantsPanelProps) {
+export function ParticipantsPanel({ participants, canRespond, currentUserId, onRespond, onRemove, onInvite }: ParticipantsPanelProps) {
   const [comment, setComment] = useState('');
+  const [inviteInput, setInviteInput] = useState('');
+
+  const handleInvite = async () => {
+    const participantIds = inviteInput
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    if (participantIds.length === 0 || !onInvite) {
+      return;
+    }
+
+    await onInvite(participantIds);
+    setInviteInput('');
+  };
 
   return (
     <Card>
@@ -46,6 +63,17 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
             </div>
           </div>
         ))}
+        {onInvite ? (
+          <div className="participants-panel__invite">
+            <Input
+              label="Пригласить участников"
+              value={inviteInput}
+              onChange={(event) => setInviteInput(event.target.value)}
+              placeholder="guid1, guid2, guid3"
+            />
+            <Button onClick={() => void handleInvite()}>Добавить участников</Button>
+          </div>
+        ) : null}
         {canRespond && participants.some((participant) => participant.userId === currentUserId) ? (
           <div className="participants-panel__response">
             <Textarea label="Комментарий к ответу" value={comment} onChange={(event) => setComment(event.target.value)} />

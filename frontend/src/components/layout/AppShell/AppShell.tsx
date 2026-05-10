@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import { ToastViewport } from '../../ui/ToastViewport/ToastViewport';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCurrentUserThunk, hydrateSessionFromStorage } from '../../../store/slices/authSlice';
 import { Header } from '../Header/Header';
@@ -24,7 +23,6 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <ToastViewport />
       <div className="app-shell__gradient" />
       <div className="app-shell__container">
         <Header />

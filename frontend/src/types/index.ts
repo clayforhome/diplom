@@ -70,6 +70,20 @@ export interface RegisterResponseData {
   message: string;
 }
 
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordRequest {
+  userId: string;
+  newPassword: string;
+}
+
+export interface PasswordResponseData {
+  message: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;

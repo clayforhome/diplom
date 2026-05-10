@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { store } from './store';
 import { router } from './router';
 import { GlobalLoader } from './components/ui/GlobalLoader/GlobalLoader';
+import { ToastViewport } from './components/ui/ToastViewport/ToastViewport';
 import { configureHttpClientActivityHandlers } from './http/httpClient';
 import { beginRequest, endRequest } from './store/slices/uiSlice';
 import './styles/global.scss';
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>
       <GlobalLoader />
+      <ToastViewport />
       <RouterProvider router={router} />
     </Provider>
   </React.StrictMode>

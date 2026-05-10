@@ -17,6 +17,10 @@
 @import '../components/meetings/MeetingForm/MeetingForm.scss';
 @import '../components/meetings/ParticipantsPanel/ParticipantsPanel.scss';
 @import '../pages/auth/AuthPage.scss';
+@import '../pages/dashboard/DashboardPage.scss';
+@import '../pages/profile/ProfilePage.scss';
+@import '../pages/admin/AdminDashboardPage.scss';
+@import '../pages/admin/AdminUsersPage.scss';
 
 :root {
   font-family: $font-family-base;

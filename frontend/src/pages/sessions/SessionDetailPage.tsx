@@ -119,6 +119,16 @@ export function SessionDetailPage() {
             toast('Ответ на приглашение сохранён', 'success');
             await dispatch(fetchParticipantsThunk(id)).unwrap();
           }}
+          onInvite={
+            canManage
+              ? async (participantIds) => {
+                  await sessionsService.inviteParticipants(id, { participantIds });
+                  toast('Участники приглашены', 'success');
+                  await dispatch(fetchParticipantsThunk(id)).unwrap();
+                  await dispatch(fetchMeetingThunk(id)).unwrap();
+                }
+              : undefined
+          }
           onRemove={
             canManage
               ? async (userId) => {

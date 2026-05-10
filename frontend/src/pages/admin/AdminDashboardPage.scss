@@ -1,0 +1,72 @@
+.admin-hero,
+.admin-grid,
+.admin-panel {
+  display: flex;
+}
+
+.admin-hero,
+.admin-panel {
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+}
+
+.admin-hero {
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border-radius: 1.75rem;
+}
+
+.admin-hero__eyebrow {
+  color: $text-secondary;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.admin-hero h2,
+.admin-panel h3 {
+  margin: 0.25rem 0 0;
+}
+
+.admin-hero p,
+.admin-panel p {
+  margin: 0.75rem 0 0;
+  color: $text-secondary;
+}
+
+.admin-hero__link {
+  padding: 0.95rem 1.15rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0071e3, #3b82f6);
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 16px 30px rgba(0, 113, 227, 0.2);
+}
+
+.admin-grid {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-panel {
+  flex: 1 1 18rem;
+  flex-direction: column;
+  padding: 1.4rem;
+  border-radius: 1.5rem;
+}
+
+.admin-panel--accent {
+  background: linear-gradient(135deg, rgba(0, 113, 227, 0.14), rgba(255, 255, 255, 0.82));
+}
+
+@media (max-width: 900px) {
+  .admin-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

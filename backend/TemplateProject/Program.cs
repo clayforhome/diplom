@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json.Serialization;
 using TemplateProject;
 using TemplateProject.DataAccess;
 using TemplateProject.Domain;
@@ -40,6 +41,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(opt =>
 });
 
 builder.Services.AddControllers();
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddMediatR(opt => { opt.RegisterServicesFromAssemblyContaining<Program>(); });
 builder.Services.AddOpenApi(opt =>
@@ -176,73 +181,71 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
 
     var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
-    var adminUser = await userManager.FindByEmailAsync(adminLogin);
 
-    if (adminUser != null)
+    await EnsureRoleExistsAsync(roleManager, Role.Admin);
+    await EnsureRoleExistsAsync(roleManager, Role.User);
+    await EnsureRoleExistsAsync(roleManager, Role.Organizer);
+
+    var adminUser = await EnsureUserAsync(userManager, adminLogin, adminPassword);
+    var userUser = await EnsureUserAsync(userManager, userLogin, userPassword);
+    var organizerUser = await EnsureUserAsync(userManager, organizerLogin, organizerPassword);
+
+    await EnsureOnlyRolesAsync(userManager, adminUser, [Role.Admin]);
+    await EnsureOnlyRolesAsync(userManager, userUser, [Role.User]);
+    await EnsureOnlyRolesAsync(userManager, organizerUser, [Role.Organizer]);
+}
+
+async Task EnsureRoleExistsAsync(RoleManager<Role> roleManager, string roleName)
+{
+    if (await roleManager.RoleExistsAsync(roleName))
     {
         return;
     }
 
-    var userUser = await userManager.FindByEmailAsync(userLogin);
-
-    if (userUser != null)
+    await roleManager.CreateAsync(new Role
     {
-        return;
+        Name = roleName,
+    });
+}
+
+async Task<User> EnsureUserAsync(UserManager<User> userManager, string email, string password)
+{
+    var user = await userManager.FindByEmailAsync(email);
+
+    if (user != null)
+    {
+        return user;
     }
 
-    var organizerUser = await userManager.FindByEmailAsync(organizerLogin);
-
-    if (organizerUser != null)
+    user = new User
     {
-        return;
+        UserName = email,
+        Email = email,
+        EmailConfirmed = true,
+    };
+
+    await userManager.CreateAsync(user, password);
+    return user;
+}
+
+async Task EnsureOnlyRolesAsync(UserManager<User> userManager, User user, IEnumerable<string> expectedRoles)
+{
+    var currentRoles = await userManager.GetRolesAsync(user);
+    var expectedRoleSet = expectedRoles.ToHashSet(StringComparer.Ordinal);
+    var rolesToRemove = currentRoles.Where(role => !expectedRoleSet.Contains(role)).ToArray();
+
+    if (rolesToRemove.Length > 0)
+    {
+        await userManager.RemoveFromRolesAsync(user, rolesToRemove);
     }
 
-    adminUser = new User
+    foreach (var role in expectedRoleSet)
     {
-        UserName = adminLogin,
-        Email = adminLogin,
-        EmailConfirmed = true,
-    };
-
-    userUser = new User
-    {
-        UserName = userLogin,
-        Email = userLogin,
-        EmailConfirmed = true,
-    };
-
-    organizerUser = new User
-    {
-        UserName = organizerLogin,
-        Email = organizerLogin,
-        EmailConfirmed = true,
-    };
-
-    await using var tx = context.Database.BeginTransaction();
-
-    await roleManager.CreateAsync(new Role
-    {
-        Name = Role.Admin,
-    });
-    await roleManager.CreateAsync(new Role
-    {
-        Name = Role.User,
-    });
-    await roleManager.CreateAsync(new Role
-    {
-        Name = Role.Organizer,
-    });
-
-    await userManager.CreateAsync(adminUser, adminPassword);
-    await userManager.AddToRoleAsync(adminUser, Role.Admin);
-
-    await userManager.CreateAsync(userUser, userPassword);
-    await userManager.AddToRoleAsync(userUser, Role.User);
-
-    await userManager.CreateAsync(organizerUser, organizerPassword);
-    await userManager.AddToRoleAsync(organizerUser, Role.Admin);
-
-    await tx.CommitAsync();
+        if (!currentRoles.Contains(role, StringComparer.Ordinal))
+        {
+            await userManager.AddToRoleAsync(user, role);
+        }
+    }
 }
 
 async Task ApplyMigrationsWithRetryAsync(
