@@ -83,9 +83,8 @@
 
 .admin-users-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(22rem, 22rem));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  justify-content: start;
 }
 
 .admin-users-page-meta {
@@ -97,12 +96,18 @@
 }
 
 .admin-user-card {
-  width: 22rem;
+  width: 100%;
   min-height: 100%;
   flex-direction: column;
   gap: 1.2rem;
   padding: 1.4rem;
   border-radius: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .admin-users-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .admin-user-card__top {
