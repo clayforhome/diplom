@@ -25,7 +25,7 @@ public class DeleteUserCommand : IFeatureEndpoint
             .WithName("DeleteUser")
             .WithTags("Users")
             .WithOpenApi()
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthorizationPolicy.OnlyAdminPolicy);
     }
 
     public record Request(Guid UserId) : IRequest<BaseApiResponse<Response>>;

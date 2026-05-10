@@ -24,7 +24,7 @@ public class ListUsersQuery : IFeatureEndpoint
             .WithName("ListUsers")
             .WithTags("Users")
             .WithOpenApi()
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthorizationPolicy.OnlyAdminPolicy);
     }
 
     public record Request(int Page, int Limit) : IRequest<BaseApiResponse<Response>>;

@@ -25,7 +25,7 @@ public class ResetPasswordCommand : IFeatureEndpoint
             .WithName("ResetPassword")
             .WithTags("Auth")
             .WithOpenApi()
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthorizationPolicy.OnlyAdminPolicy);
     }
 
     public class ResetPasswordRequest
