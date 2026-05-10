@@ -27,7 +27,7 @@ public class GetUsersForOrganizerQuery : IFeatureEndpoint
 
     public record Response
     {
-        public List<UserModel> Users = [];
+        public List<UserModel> Users { get; set; } = [];
     }
 
     public record UserModel

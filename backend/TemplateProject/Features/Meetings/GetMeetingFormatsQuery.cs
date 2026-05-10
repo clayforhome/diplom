@@ -24,7 +24,7 @@ public class GetMeetingFormatsQuery : IFeatureEndpoint
 
     public record Response
     {
-        public List<MeetingFormat> MeetingFormats = [];
+        public List<MeetingFormat> MeetingFormats { get; set; } = [];
     }
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>

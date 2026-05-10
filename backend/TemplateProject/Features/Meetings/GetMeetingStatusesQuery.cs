@@ -24,7 +24,7 @@ public class GetMeetingStatusesQuery : IFeatureEndpoint
 
     public record Response
     {
-        public List<MeetingStatus> MeetingStatus = [];
+        public List<MeetingStatus> MeetingStatus { get; set; } = [];
     }
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
