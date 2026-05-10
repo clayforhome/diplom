@@ -2,10 +2,14 @@ import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '../../components/ui/Badge/Badge';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
-import { useAppSelector } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchMeetingsThunk } from '../../store/slices/sessionsSlice';
 import { formatDate, formatDateTimeRange } from '../../utils/format';
+import { getMeetingStatusLabel } from '../../utils/meetingLabels';
+import { getUserRoleLabel } from '../../utils/userLabels';
 
 export function DashboardPage() {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const meetings = useAppSelector((state) => state.sessions.meetings);
   const roles = user?.roles ?? [];
@@ -23,28 +27,38 @@ export function DashboardPage() {
   const nextMeeting = upcomingMeetings[0] ?? null;
   const managedMeetings = useMemo(() => meetings.filter((meeting) => meeting.organizerId === user?.id).length, [meetings, user?.id]);
   const confirmedMeetings = useMemo(() => meetings.filter((meeting) => meeting.status === 'Confirmed').length, [meetings]);
-  const workspaceLabel = isAdmin ? 'Администрирование и контроль доступа' : isOrganizer ? 'Координация встреч и участников' : 'Личный обзор и участие во встречах';
+  const workspaceLabel = isAdmin
+    ? 'Администрирование и контроль доступа'
+    : isOrganizer
+      ? 'Координация встреч и участников'
+      : 'Личный обзор и участие во встречах';
   const quickActions = [
     { to: '/sessions', title: 'Открыть встречи', description: 'Перейти к расписанию, фильтрам и деталям встреч.' },
-    { to: '/profile', title: 'Посмотреть профиль', description: 'Проверить учётные данные и роли текущего аккаунта.' },
-    ...(isAdmin ? [{ to: '/admin', title: 'Открыть admin workspace', description: 'Перейти к административным сценариям и пользователям.' }] : [])
+    { to: '/profile', title: 'Открыть профиль', description: 'Проверить данные аккаунта, роли и параметры доступа.' },
+    ...(isAdmin ? [{ to: '/admin', title: 'Открыть админ-панель', description: 'Перейти к административным разделам и списку пользователей.' }] : [])
   ];
 
   useEffect(() => {
     document.title = 'Главная - Meeting Management System';
   }, []);
 
+  useEffect(() => {
+    if (meetings.length === 0) {
+      void dispatch(fetchMeetingsThunk({ page: 1, limit: 12 }));
+    }
+  }, [dispatch, meetings.length]);
+
   return (
     <PageSection title="Главная панель" subtitle="Быстрый обзор текущего аккаунта и встреч" actions={<Link to="/sessions">К реестру встреч</Link>}>
       <div className="dashboard-hero">
         <div className="dashboard-hero__content">
-          <span className="dashboard-hero__eyebrow">Workspace overview</span>
-          <h2>{user?.name ?? 'Пользователь'}</h2>
+          <span className="dashboard-hero__eyebrow">Обзор рабочего пространства</span>
+          <h2>{user?.userName ?? user?.name ?? 'Пользователь'}</h2>
           <p>{workspaceLabel}</p>
           <div className="dashboard-hero__badges">
             {roles.map((role) => (
               <Badge key={role} tone="info">
-                {role}
+                {getUserRoleLabel(role)}
               </Badge>
             ))}
           </div>
@@ -113,7 +127,7 @@ export function DashboardPage() {
                     <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
                   </div>
                   <div className="dashboard-timeline__meta">
-                    <span>{meeting.status}</span>
+                    <span>{getMeetingStatusLabel(meeting.status)}</span>
                     <span>{formatDate(meeting.date)}</span>
                     <span>{formatDateTimeRange(meeting.startTime, meeting.endTime)}</span>
                   </div>
@@ -123,7 +137,7 @@ export function DashboardPage() {
           ) : (
             <div className="dashboard-empty-strip">
               <strong>Расписание пока свободно</strong>
-              <p>Когда появятся встречи, здесь появится компактная лента ближайших событий.</p>
+              <p>Когда появятся встречи, здесь будет компактная лента ближайших событий.</p>
             </div>
           )}
         </section>
@@ -144,7 +158,7 @@ export function DashboardPage() {
                 <span>предстоящих событий</span>
               </div>
               <div>
-                <strong>{isAdmin ? 'Admin + Organizer' : 'Organizer'}</strong>
+                <strong>{isAdmin ? 'Админ + Организатор' : 'Организатор'}</strong>
                 <span>активный рабочий режим</span>
               </div>
             </div>

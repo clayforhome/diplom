@@ -5,6 +5,8 @@ import { logout } from '../../../store/slices/authSlice';
 import { useAuth } from '../../../hooks/useAuth';
 import { authService } from '../../../http/authService';
 import { getDisplayName, getProfileAvatarStyle, getProfileInitials } from '../../../utils/profile';
+import { getUserRoleLabel } from '../../../utils/userLabels';
+import type { UserRole } from '../../../types';
 import './Header.scss';
 
 export function Header() {
@@ -13,7 +15,7 @@ export function Header() {
   const { user, roles } = useAuth();
 
   const userTitle = getDisplayName(user?.name, user?.userName, user?.email);
-  const userSubtitle = user?.email ?? user?.userName ?? (roles.join(', ') || 'User');
+  const userSubtitle = user?.email ?? (roles.map((role) => getUserRoleLabel(role as UserRole)).join(', ') || 'Пользователь');
   const avatarStyle = getProfileAvatarStyle(user?.name, user?.userName, user?.email);
 
   const handleLogout = async () => {
@@ -32,7 +34,7 @@ export function Header() {
       <div className="app-header__brand">
         <div className="app-header__brand-copy">
           <span className="app-header__eyebrow">Meeting Management System</span>
-          <strong className="app-header__title">Control Center</strong>
+          <strong className="app-header__title">Центр управления</strong>
         </div>
       </div>
       <nav className="app-header__nav">

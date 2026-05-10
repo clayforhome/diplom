@@ -9,6 +9,7 @@ import { authService } from '../../http/authService';
 import { useToast } from '../../hooks/useToast';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getProfileAvatarStyle, getProfileInitials } from '../../utils/profile';
+import { getUserRoleLabel } from '../../utils/userLabels';
 
 export function ProfilePage() {
   const user = useAppSelector((state) => state.auth.user);
@@ -59,16 +60,12 @@ export function ProfilePage() {
             {initials}
           </div>
           <div>
-            <span className="profile-hero__eyebrow">Account snapshot</span>
+            <span className="profile-hero__eyebrow">Снимок аккаунта</span>
             <h2>{displayName}</h2>
             <p>{user?.email ?? 'Email не указан'}</p>
           </div>
         </div>
         <div className="profile-hero__meta">
-          {/*<div>*/}
-          {/*  <strong>{user?.roles.length ?? 0}</strong>*/}
-          {/*  <span>активных ролей</span>*/}
-          {/*</div>*/}
           <div>
             <strong>{user?.age ?? '-'}</strong>
             <span>возраст в профиле</span>
@@ -89,7 +86,7 @@ export function ProfilePage() {
           <div className="profile-facts">
             <div className="profile-facts__item">
               <span>ФИО</span>
-              <strong>{user?.userName ?? 'Не указан'}</strong>
+              <strong>{user?.userName ?? 'Не указано'}</strong>
             </div>
             <div className="profile-facts__item">
               <span>Email</span>
@@ -114,7 +111,7 @@ export function ProfilePage() {
           <div className="profile-role-cloud">
             {(user?.roles ?? []).map((role) => (
               <Badge key={role} tone="info">
-                {role}
+                {getUserRoleLabel(role)}
               </Badge>
             ))}
           </div>
@@ -130,12 +127,7 @@ export function ProfilePage() {
           <div className="profile-password">
             <Input label="Текущий пароль" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />
             <Input label="Новый пароль" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-            <Input
-              label="Подтверждение нового пароля"
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-            />
+            <Input label="Подтверждение нового пароля" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
             <Button onClick={() => void handleChangePassword()} disabled={isChangingPassword}>
               Сменить пароль
             </Button>
