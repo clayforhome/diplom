@@ -20,6 +20,11 @@ export const sessionsService = {
       .get<{ meetingFormats: MeetingFormat[] }>('/meeting-formats')
       .then((response) => response.meetingFormats);
   },
+  getMeetingStatuses(): Promise<MeetingStatus[]> {
+    return httpClient
+      .get<{ meetingStatus: MeetingStatus[] }>('/meeting-statuses')
+      .then((response) => response.meetingStatus);
+  },
   getOrganizerUsers(): Promise<OrganizerUser[]> {
     return httpClient
       .get<{ users: OrganizerUser[] }>('/organizer/users')

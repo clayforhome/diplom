@@ -6,6 +6,7 @@ import { Textarea } from '../../ui/Textarea/Textarea';
 import { Card } from '../../ui/Card/Card';
 import { sessionsService } from '../../../http/sessionsService';
 import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser } from '../../../types';
+import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../../utils/meetingLabels';
 import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './MeetingForm.scss';
 
@@ -16,19 +17,10 @@ interface MeetingFormProps {
   isEditing?: boolean;
 }
 
-const statusOptions: Array<{ value: MeetingStatus; label: string }> = [
-  { value: 'Draft', label: 'Draft' },
-  { value: 'Scheduled', label: 'Scheduled' },
-  { value: 'AwaitingConfirmation', label: 'AwaitingConfirmation' },
-  { value: 'Confirmed', label: 'Confirmed' },
-  { value: 'Rescheduled', label: 'Rescheduled' },
-  { value: 'Cancelled', label: 'Cancelled' },
-  { value: 'Completed', label: 'Completed' }
-];
-
 export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEditing = false }: MeetingFormProps) {
   const [values, setValues] = useState(initialValues);
   const [meetingFormats, setMeetingFormats] = useState<MeetingFormat[]>([]);
+  const [meetingStatuses, setMeetingStatuses] = useState<MeetingStatus[]>([]);
   const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
 
   useEffect(() => {
@@ -59,10 +51,30 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
   }, []);
 
   useEffect(() => {
-    if (isEditing) {
+    if (!isEditing) {
       return;
     }
 
+    let isMounted = true;
+
+    void sessionsService.getMeetingStatuses().then((statuses) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setMeetingStatuses(statuses);
+      setValues((current) => ({
+        ...current,
+        status: current.status && statuses.includes(current.status) ? current.status : statuses[0] ?? current.status
+      }));
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditing]);
+
+  useEffect(() => {
     let isMounted = true;
 
     void sessionsService.getOrganizerUsers().then((users) => {
@@ -74,7 +86,7 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
     return () => {
       isMounted = false;
     };
-  }, [isEditing]);
+  }, []);
 
   const updateField = <K extends keyof MeetingFormValues>(field: K, value: MeetingFormValues[K]) => {
     setValues((current) => ({ ...current, [field]: value }));
@@ -84,9 +96,18 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
     () =>
       (meetingFormats.length > 0 ? meetingFormats : [values.format]).map((format) => ({
         value: format,
-        label: format
+        label: getMeetingFormatLabel(format)
       })),
     [meetingFormats, values.format]
+  );
+
+  const statusOptions = useMemo(
+    () =>
+      meetingStatuses.map((status) => ({
+        value: status,
+        label: getMeetingStatusLabel(status)
+      })),
+    [meetingStatuses]
   );
 
   return (
@@ -104,11 +125,11 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
           <Input label="Дата" type="date" value={values.date} onChange={(event) => updateField('date', event.target.value)} required />
           <Input label="Начало" type="time" value={values.startTime} onChange={(event) => updateField('startTime', event.target.value)} required />
           <Input label="Окончание" type="time" value={values.endTime} onChange={(event) => updateField('endTime', event.target.value)} required />
-          {isEditing ? (
-            <Select label="Статус" value={(values as MeetingFormValues & { status?: MeetingStatus }).status ?? 'Draft'} onChange={() => undefined} options={statusOptions} />
+          {isEditing && values.status ? (
+            <Select label="Статус" value={values.status} onChange={(value) => updateField('status', value as MeetingStatus)} options={statusOptions} />
           ) : null}
           <Input label="Локация" value={values.location} onChange={(event) => updateField('location', event.target.value)} />
-          <Input label="Ссылка" value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} />
+          <Input label="Ссылка на встречу" value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} />
           <Input label="Контактная информация" value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
           {!isEditing ? (
             <div className="meeting-form__full-width">

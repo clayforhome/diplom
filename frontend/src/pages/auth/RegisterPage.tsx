@@ -207,32 +207,12 @@ export function RegisterPage() {
           }}
         >
           <div className="auth-page__hero">
-            <span className="auth-page__eyebrow">New account</span>
+            <span className="auth-page__eyebrow">Новый аккаунт</span>
             <h1 className="auth-page__title">Создайте рабочий профиль</h1>
           </div>
-          <Input
-            label="Имя"
-            value={form.name}
-            error={errors.name}
-            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            required
-          />
-          <Input
-            label="Email"
-            type="email"
-            value={form.email}
-            error={errors.email}
-            onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-            required
-          />
-          <Input
-            label="Пароль"
-            type="password"
-            value={form.password}
-            error={errors.password}
-            onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-            required
-          />
+          <Input label="Имя" value={form.name} error={errors.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+          <Input label="Email" type="email" value={form.email} error={errors.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
+          <Input label="Пароль" type="password" value={form.password} error={errors.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} required />
           <Input
             label="Телефон"
             type="tel"
@@ -240,12 +220,7 @@ export function RegisterPage() {
             maxLength={18}
             value={form.phoneNumber}
             error={errors.phoneNumber}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                phoneNumber: formatPhone(event.target.value)
-              }))
-            }
+            onChange={(event) => setForm((current) => ({ ...current, phoneNumber: formatPhone(event.target.value) }))}
             onFocus={() => {
               if (!form.phoneNumber.trim()) {
                 setForm((current) => ({ ...current, phoneNumber: PHONE_MASK_PREFIX }));
@@ -263,17 +238,10 @@ export function RegisterPage() {
             inputMode="numeric"
             value={form.age}
             error={errors.age}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                age: extractDigits(event.target.value).slice(0, 3)
-              }))
-            }
+            onChange={(event) => setForm((current) => ({ ...current, age: extractDigits(event.target.value).slice(0, 3) }))}
             required
           />
-          {Object.keys(errors).length > 0 ? (
-            <p className="auth-page__validation">Исправьте ошибки в форме перед отправкой.</p>
-          ) : null}
+          {Object.keys(errors).length > 0 ? <p className="auth-page__validation">Исправьте ошибки в форме перед отправкой.</p> : null}
           <Button type="submit" fullWidth disabled={isLoading}>
             {isLoading ? 'Отправка...' : 'Зарегистрироваться'}
           </Button>

@@ -9,6 +9,7 @@ import { checkAvailabilityThunk, clearAvailability, fetchMeetingsThunk } from '.
 import { sessionsService } from '../../http/sessionsService';
 import { useToast } from '../../hooks/useToast';
 import { toDateTimeString } from '../../utils/format';
+import { getMeetingStatusLabel } from '../../utils/meetingLabels';
 import type { MeetingFormValues, MeetingStatus } from '../../types';
 
 const initialFormValues: MeetingFormValues = {
@@ -30,11 +31,16 @@ export function SessionsPage() {
   const { meetings, availability } = useAppSelector((state) => state.sessions);
   const { roles } = useAppSelector((state) => state.auth);
   const [status, setStatus] = useState<MeetingStatus | 'All'>('All');
+  const [statusOptions, setStatusOptions] = useState<MeetingStatus[]>([]);
 
   const canManageMeetings = useMemo(() => roles.includes('Organizer') || roles.includes('Admin'), [roles]);
 
   useEffect(() => {
     document.title = 'Расписание встреч - Meeting Management System';
+  }, []);
+
+  useEffect(() => {
+    void sessionsService.getMeetingStatuses().then(setStatusOptions);
   }, []);
 
   useEffect(() => {
@@ -95,14 +101,11 @@ export function SessionsPage() {
             value={status}
             onChange={(value) => setStatus(value as MeetingStatus | 'All')}
             options={[
-              { value: 'All', label: 'All' },
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Scheduled', label: 'Scheduled' },
-              { value: 'AwaitingConfirmation', label: 'AwaitingConfirmation' },
-              { value: 'Confirmed', label: 'Confirmed' },
-              { value: 'Rescheduled', label: 'Rescheduled' },
-              { value: 'Cancelled', label: 'Cancelled' },
-              { value: 'Completed', label: 'Completed' }
+              { value: 'All', label: 'Все статусы' },
+              ...statusOptions.map((meetingStatus) => ({
+                value: meetingStatus,
+                label: getMeetingStatusLabel(meetingStatus)
+              }))
             ]}
           />
         </div>

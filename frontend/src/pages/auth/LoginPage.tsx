@@ -37,18 +37,18 @@ export function LoginPage() {
             try {
               await dispatch(loginThunk({ login, password })).unwrap();
               await dispatch(fetchCurrentUserThunk()).unwrap();
-              toast('Добро пожаловать обратно', 'success');
+              toast('С возвращением', 'success');
               navigate('/');
             } catch {
-              toast('Не удалось авторизоваться', 'error');
+              toast('Не удалось войти в систему', 'error');
             }
           }}
         >
           <div className="auth-page__hero">
-            <span className="auth-page__eyebrow">Secure access</span>
+            <span className="auth-page__eyebrow">Безопасный вход</span>
             <h1 className="auth-page__title">Войдите в систему встреч</h1>
           </div>
-          <Input label="Email / Login" value={login} onChange={(event) => setLogin(event.target.value)} required />
+          <Input label="Email или логин" value={login} onChange={(event) => setLogin(event.target.value)} required />
           <Input label="Пароль" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
           <Button type="submit" fullWidth disabled={isLoading}>
             Войти

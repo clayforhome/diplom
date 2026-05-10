@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '../../ui/Badge/Badge';
 import { Button } from '../../ui/Button/Button';
 import { Card } from '../../ui/Card/Card';
 import { Textarea } from '../../ui/Textarea/Textarea';
-import { Input } from '../../ui/Input/Input';
-import type { InvitationStatus, Participant } from '../../../types';
+import { sessionsService } from '../../../http/sessionsService';
+import type { InvitationStatus, OrganizerUser, Participant } from '../../../types';
 import { formatDate, formatTime } from '../../../utils/format';
+import { getInvitationStatusLabel } from '../../../utils/meetingLabels';
+import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './ParticipantsPanel.scss';
 
 interface ParticipantsPanelProps {
@@ -19,20 +21,39 @@ interface ParticipantsPanelProps {
 
 export function ParticipantsPanel({ participants, canRespond, currentUserId, onRespond, onRemove, onInvite }: ParticipantsPanelProps) {
   const [comment, setComment] = useState('');
-  const [inviteInput, setInviteInput] = useState('');
+  const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
+  const [inviteSelection, setInviteSelection] = useState<string[]>([]);
 
-  const handleInvite = async () => {
-    const participantIds = inviteInput
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-    if (participantIds.length === 0 || !onInvite) {
+  useEffect(() => {
+    if (!onInvite) {
       return;
     }
 
-    await onInvite(participantIds);
-    setInviteInput('');
+    let isMounted = true;
+
+    void sessionsService.getOrganizerUsers().then((users) => {
+      if (isMounted) {
+        setOrganizerUsers(users);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [onInvite]);
+
+  const availableUsers = useMemo(() => {
+    const existingIds = new Set(participants.map((participant) => participant.userId));
+    return organizerUsers.filter((user) => !existingIds.has(user.id));
+  }, [organizerUsers, participants]);
+
+  const handleInvite = async () => {
+    if (inviteSelection.length === 0 || !onInvite) {
+      return;
+    }
+
+    await onInvite(inviteSelection);
+    setInviteSelection([]);
   };
 
   return (
@@ -53,7 +74,7 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
             </div>
             <div className="participants-panel__actions">
               <Badge tone={participant.invitationStatus === 'Accepted' ? 'success' : participant.invitationStatus === 'Declined' ? 'danger' : 'warning'}>
-                {participant.invitationStatus}
+                {getInvitationStatusLabel(participant.invitationStatus)}
               </Badge>
               {onRemove ? (
                 <Button variant="secondary" onClick={() => onRemove(participant.userId)}>
@@ -65,13 +86,8 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
         ))}
         {onInvite ? (
           <div className="participants-panel__invite">
-            <Input
-              label="Пригласить участников"
-              value={inviteInput}
-              onChange={(event) => setInviteInput(event.target.value)}
-              placeholder="guid1, guid2, guid3"
-            />
-            <Button onClick={() => void handleInvite()}>Добавить участников</Button>
+            <ParticipantsDropdown label="Добавить участников" users={availableUsers} value={inviteSelection} onChange={setInviteSelection} />
+            <Button onClick={() => void handleInvite()}>Пригласить выбранных</Button>
           </div>
         ) : null}
         {canRespond && participants.some((participant) => participant.userId === currentUserId) ? (

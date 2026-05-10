@@ -149,6 +149,7 @@ export interface MeetingFormValues {
   startTime: string;
   endTime: string;
   format: MeetingFormat;
+  status?: MeetingStatus;
   location: string;
   meetingLink: string;
   contactInfo: string;
