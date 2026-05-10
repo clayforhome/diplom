@@ -60,7 +60,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavi
 builder.Services.AddAuthorizationBuilder()
     .AddDefaultPolicy(AuthorizationPolicy.UserPolicy, policy => policy.RequireAuthenticatedUser())
     .AddPolicy(AuthorizationPolicy.OnlyAdminPolicy, policy => policy.RequireRole(Role.Admin))
-    .AddPolicy(AuthorizationPolicy.OrganizerPolicy, policy => policy.RequireRole(Role.Organizer))
+    .AddPolicy(AuthorizationPolicy.ManagementPolicy, policy => policy.RequireRole(Role.Admin, Role.Organizer))
     ;
 
 builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"));

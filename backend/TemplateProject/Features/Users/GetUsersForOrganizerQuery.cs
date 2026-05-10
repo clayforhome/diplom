@@ -18,7 +18,7 @@ public class GetUsersForOrganizerQuery : IFeatureEndpoint
             .WithName("GetUsersForOrganizer")
             .WithTags("Users")
             .WithOpenApi()
-            .RequireAuthorization(AuthorizationPolicy.OrganizerPolicy, AuthorizationPolicy.OnlyAdminPolicy);
+            .RequireAuthorization(AuthorizationPolicy.ManagementPolicy);
     }
 
     public record Request : IRequest<BaseApiResponse<Response>>

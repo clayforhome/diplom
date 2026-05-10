@@ -17,7 +17,7 @@ public class GetMeetingFormatsQuery : IFeatureEndpoint
             .WithName("GetMeetingFormats")
             .WithOpenApi()
             .WithTags("Meetings")
-            .RequireAuthorization(AuthorizationPolicy.OrganizerPolicy, AuthorizationPolicy.OnlyAdminPolicy);
+            .RequireAuthorization(AuthorizationPolicy.ManagementPolicy);
     }
 
     public record Request : IRequest<BaseApiResponse<Response>>;

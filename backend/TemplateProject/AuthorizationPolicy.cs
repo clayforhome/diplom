@@ -3,6 +3,6 @@ namespace TemplateProject;
 public class AuthorizationPolicy
 {
     public const string OnlyAdminPolicy = "OnlyAdminPolicy";
-    public const string OrganizerPolicy = "OrganizerPolicy";
+    public const string ManagementPolicy = "ManagementPolicy";
     public const string UserPolicy = "UserPolicy";
 }
