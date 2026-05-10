@@ -62,10 +62,9 @@ public class SignUpCommand : IFeatureEndpoint
         {
             var user = new Domain.User
             {
-                UserName = request.Model.Email,
+                UserName = request.Model.Name,
                 Email = request.Model.Email,
                 PhoneNumber = request.Model.PhoneNumber,
-                Name = request.Model.Name,
                 Age = request.Model.Age,
                 RegistrationDate = _timeProvider.GetUtcNow().UtcDateTime,
                 EmailConfirmed = true
