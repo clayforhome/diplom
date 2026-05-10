@@ -29,7 +29,6 @@ public class DeleteMeetingCommand : IFeatureEndpoint
 
     public record Response
     {
-        public MediatR.Unit Data { get; set; }
         public string Status { get; set; }
     }
 
@@ -70,7 +69,7 @@ public class DeleteMeetingCommand : IFeatureEndpoint
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new Response { Data = MediatR.Unit.Value, Status = "Ok" };
+            return new Response { Status = "Ok" };
         }
     }
 }

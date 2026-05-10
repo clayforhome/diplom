@@ -25,7 +25,6 @@ public class DatabaseContext : IdentityDbContext<
         _currentUserProvider = currentUserProvider;
     }
     
-    // public DbSet<User> Users => Set<User>(); - то как надо оформлять новые сущности для доступа к ним из бд
     public DbSet<Meeting> Meetings => Set<Meeting>();
     public DbSet<MeetingParticipant> MeetingParticipants => Set<MeetingParticipant>();
     public DbSet<MeetingFile> MeetingFiles => Set<MeetingFile>();
