@@ -9,6 +9,6 @@ export const authService = {
     return httpClient.post<RegisterResponseData>('/auth/sign-up', payload);
   },
   getCurrentUser(): Promise<CurrentUser> {
-    return httpClient.get<CurrentUser>('/users');
+    return httpClient.get<CurrentUser>('/user');
   }
 };

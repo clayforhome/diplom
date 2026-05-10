@@ -1,7 +1,40 @@
 import { jwtService } from '../utils/jwt';
 import type { ApiEnvelope, ApiErrorPayload } from '../types';
 
-const API_URL = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_PATH}`;
+type RequestActivityHandlers = {
+  onRequestStart?: () => void;
+  onRequestEnd?: () => void;
+};
+
+function trimTrailingSlash(value: string): string {
+  return value.replace(/\/+$/, '');
+}
+
+function trimLeadingSlash(value: string): string {
+  return value.replace(/^\/+/, '');
+}
+
+function resolveApiUrl(): string {
+  const rawUrl = import.meta.env.VITE_API_URL;
+  const rawBasePath = import.meta.env.VITE_API_BASE_PATH;
+
+  if (!rawUrl) {
+    throw new Error('VITE_API_URL is not defined');
+  }
+
+  const normalizedUrl = trimTrailingSlash(rawUrl);
+  const normalizedBasePath = rawBasePath ? `/${trimLeadingSlash(rawBasePath)}` : '';
+
+  return `${normalizedUrl}${normalizedBasePath}`;
+}
+
+const API_URL = resolveApiUrl();
+const requestActivityHandlers: RequestActivityHandlers = {};
+
+export function configureHttpClientActivityHandlers(handlers: RequestActivityHandlers) {
+  requestActivityHandlers.onRequestStart = handlers.onRequestStart;
+  requestActivityHandlers.onRequestEnd = handlers.onRequestEnd;
+}
 
 export class ApiError extends Error {
   statusCode: number;
@@ -69,13 +102,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers
-  });
+  requestActivityHandlers.onRequestStart?.();
 
-  const envelope = await parseResponse<ApiEnvelope<T>>(response);
-  return envelope.data;
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers
+    });
+
+    const envelope = await parseResponse<ApiEnvelope<T>>(response);
+    return envelope.data;
+  } finally {
+    requestActivityHandlers.onRequestEnd?.();
+  }
 }
 
 export const httpClient = {

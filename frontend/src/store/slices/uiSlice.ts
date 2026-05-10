@@ -4,11 +4,13 @@ import type { ToastItem } from '../../types';
 interface UiState {
   mobileMenuOpen: boolean;
   toasts: ToastItem[];
+  activeRequests: number;
 }
 
 const initialState: UiState = {
   mobileMenuOpen: false,
-  toasts: []
+  toasts: [],
+  activeRequests: 0
 };
 
 const uiSlice = createSlice({
@@ -24,11 +26,17 @@ const uiSlice = createSlice({
         ...action.payload
       });
     },
+    beginRequest(state) {
+      state.activeRequests += 1;
+    },
+    endRequest(state) {
+      state.activeRequests = Math.max(0, state.activeRequests - 1);
+    },
     removeToast(state, action: PayloadAction<string>) {
       state.toasts = state.toasts.filter((toast) => toast.id !== action.payload);
     }
   }
 });
 
-export const { pushToast, removeToast, setMobileMenuOpen } = uiSlice.actions;
+export const { pushToast, removeToast, setMobileMenuOpen, beginRequest, endRequest } = uiSlice.actions;
 export default uiSlice.reducer;

@@ -112,9 +112,7 @@ using (var scope = app.Services.CreateScope())
 
     var context = serviceProvider.GetRequiredService<DatabaseContext>();
 
-    context.Database.Migrate();
-
-    await SetupInitialDataAsync(scope, app.Configuration, context);
+    await ApplyMigrationsWithRetryAsync(scope, context, app.Configuration, app.Logger);
 }
 
 if (app.Environment.IsDevelopment())
@@ -245,4 +243,36 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
     await userManager.AddToRoleAsync(organizerUser, Role.Admin);
 
     await tx.CommitAsync();
+}
+
+async Task ApplyMigrationsWithRetryAsync(
+    IServiceScope serviceScope,
+    DatabaseContext context,
+    IConfiguration configuration,
+    ILogger logger)
+{
+    const int maxAttempts = 10;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try
+        {
+            await context.Database.MigrateAsync();
+            await SetupInitialDataAsync(serviceScope, configuration, context);
+            return;
+        }
+        catch (Exception ex) when (attempt < maxAttempts)
+        {
+            logger.LogWarning(
+                ex,
+                "Database is not ready yet. Startup attempt {Attempt} of {MaxAttempts} failed. Retrying...",
+                attempt,
+                maxAttempts);
+
+            await Task.Delay(TimeSpan.FromSeconds(Math.Min(attempt * 2, 15)));
+        }
+    }
+
+    await context.Database.MigrateAsync();
+    await SetupInitialDataAsync(serviceScope, configuration, context);
 }

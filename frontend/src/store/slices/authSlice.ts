@@ -12,15 +12,18 @@ interface AuthState {
   error: string | null;
 }
 
-const initialSession = (() => {
+function getStoredSession() {
   const token = jwtService.getToken();
+
   if (!token || jwtService.isExpired(token)) {
     jwtService.clearToken();
     return null;
   }
 
   return jwtService.getSession(token);
-})();
+}
+
+const initialSession = getStoredSession();
 
 const initialState: AuthState = {
   token: initialSession?.token ?? null,
@@ -49,6 +52,17 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    hydrateSessionFromStorage(state) {
+      const session = getStoredSession();
+
+      state.token = session?.token ?? null;
+      state.roles = session?.roles ?? [];
+      state.isAuthenticated = Boolean(session?.token);
+
+      if (!session) {
+        state.user = null;
+      }
+    },
     logout(state) {
       jwtService.clearToken();
       state.token = null;
@@ -101,5 +115,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { logout } = authSlice.actions;
+export const { hydrateSessionFromStorage, logout } = authSlice.actions;
 export default authSlice.reducer;

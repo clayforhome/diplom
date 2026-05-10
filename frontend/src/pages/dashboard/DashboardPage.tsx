@@ -38,7 +38,7 @@ export function DashboardPage() {
         </Card>
         <Card>
           <h2>Сводка</h2>
-          <p>В кэше frontend сейчас {meetings.length} встреч. Полный список можно открыть на отдельной странице с фильтрами.</p>
+          <p>На данный момент сейчас {meetings.length} встреч. Полный список можно открыть на отдельной странице с фильтрами.</p>
         </Card>
       </div>
     </PageSection>

@@ -44,7 +44,7 @@ export function SessionsPage() {
   return (
     <PageSection
       title="Встречи"
-      subtitle="Список ваших встреч и операций с ними поверх существующего backend API"
+      subtitle="Список ваших встреч и операций с ними"
       actions={
         <div className="sessions-page__filter">
           <Select

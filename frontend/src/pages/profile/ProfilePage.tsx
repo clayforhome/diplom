@@ -13,7 +13,7 @@ export function ProfilePage() {
   }, []);
 
   return (
-    <PageSection title="Мой профиль" subtitle="Данные читаются из backend текущего пользователя">
+    <PageSection title="Мой профиль" >
       <Card>
         <div className="profile-stack">
           <h2>{user?.name ?? 'Без имени'}</h2>
