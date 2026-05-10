@@ -238,7 +238,7 @@ async Task<User> EnsureUserAsync(UserManager<User> userManager, string email, st
 
         if (!string.Equals(user.UserName, fullName, StringComparison.Ordinal))
         {
-            user.UserName = fullName;
+            user.Name = fullName;
             shouldUpdate = true;
         }
 
@@ -263,7 +263,7 @@ async Task<User> EnsureUserAsync(UserManager<User> userManager, string email, st
         Email = email,
         EmailConfirmed = true,
         Name = fullName,
-        RegistrationDate = TimeProvider.System.GetUtcNow().Date,
+        RegistrationDate = TimeProvider.System.GetUtcNow().UtcDateTime,
         Age = 25
     };
 
