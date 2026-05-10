@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../ui/Button/Button';
 import { Input } from '../../ui/Input/Input';
 import { Select } from '../../ui/Select/Select';
 import { Textarea } from '../../ui/Textarea/Textarea';
 import { Card } from '../../ui/Card/Card';
-import type { MeetingFormValues, MeetingFormat, MeetingStatus } from '../../../types';
+import { sessionsService } from '../../../http/sessionsService';
+import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser } from '../../../types';
+import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './MeetingForm.scss';
 
 interface MeetingFormProps {
@@ -13,13 +15,6 @@ interface MeetingFormProps {
   onCheckAvailability?: (values: MeetingFormValues) => Promise<void>;
   isEditing?: boolean;
 }
-
-const formatOptions: Array<{ value: MeetingFormat; label: string }> = [
-  { value: 'Offline', label: 'Offline' },
-  { value: 'Online', label: 'Online' },
-  { value: 'Hybrid', label: 'Hybrid' },
-  { value: 'Phone', label: 'Phone' }
-];
 
 const statusOptions: Array<{ value: MeetingStatus; label: string }> = [
   { value: 'Draft', label: 'Draft' },
@@ -33,14 +28,66 @@ const statusOptions: Array<{ value: MeetingStatus; label: string }> = [
 
 export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEditing = false }: MeetingFormProps) {
   const [values, setValues] = useState(initialValues);
+  const [meetingFormats, setMeetingFormats] = useState<MeetingFormat[]>([]);
+  const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
 
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    void sessionsService.getMeetingFormats().then((formats) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setMeetingFormats(formats);
+      setValues((current) => {
+        if (formats.length === 0 || formats.includes(current.format)) {
+          return current;
+        }
+
+        return { ...current, format: formats[0] };
+      });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isEditing) {
+      return;
+    }
+
+    let isMounted = true;
+
+    void sessionsService.getOrganizerUsers().then((users) => {
+      if (isMounted) {
+        setOrganizerUsers(users);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isEditing]);
+
   const updateField = <K extends keyof MeetingFormValues>(field: K, value: MeetingFormValues[K]) => {
     setValues((current) => ({ ...current, [field]: value }));
   };
+
+  const formatOptions = useMemo(
+    () =>
+      (meetingFormats.length > 0 ? meetingFormats : [values.format]).map((format) => ({
+        value: format,
+        label: format
+      })),
+    [meetingFormats, values.format]
+  );
 
   return (
     <Card>
@@ -63,20 +110,16 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
           <Input label="Локация" value={values.location} onChange={(event) => updateField('location', event.target.value)} />
           <Input label="Ссылка" value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} />
           <Input label="Контактная информация" value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
-          <Input
-            label="ID участников"
-            value={values.participantIds.join(', ')}
-            onChange={(event) =>
-              updateField(
-                'participantIds',
-                event.target.value
-                  .split(',')
-                  .map((value) => value.trim())
-                  .filter(Boolean)
-              )
-            }
-            placeholder="guid1, guid2"
-          />
+          {!isEditing ? (
+            <div className="meeting-form__full-width">
+              <ParticipantsDropdown
+                label="Участники"
+                users={organizerUsers}
+                value={values.participantIds}
+                onChange={(participantIds) => updateField('participantIds', participantIds)}
+              />
+            </div>
+          ) : null}
         </div>
         <Textarea label="Описание" value={values.description} onChange={(event) => updateField('description', event.target.value)} />
         <div className="meeting-form__actions">

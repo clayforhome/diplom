@@ -171,7 +171,7 @@ export function AdminUsersPage() {
 
       <div className="admin-users-toolbar">
         <div className="admin-users-toolbar__search">
-          <Input label="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Имя, email, username, возраст, дата, подтверждение, id" />
+          <Input label="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Имя, email, ФИО, возраст, дата, подтверждение, id" />
         </div>
         <div className="admin-users-toolbar__sort">
           <Select
@@ -180,7 +180,7 @@ export function AdminUsersPage() {
             onChange={(value) => setSortKey(value as SortKey)}
             options={[
               { value: 'name', label: 'Имя' },
-              { value: 'userName', label: 'Username' },
+              { value: 'userName', label: 'ФИО' },
               { value: 'email', label: 'Email' },
               { value: 'age', label: 'Возраст' },
               { value: 'registrationDate', label: 'Дате регистрации' },
@@ -237,7 +237,7 @@ export function AdminUsersPage() {
 
             <div className="admin-user-card__facts">
               <div>
-                <span>Username</span>
+                <span>ФИО</span>
                 <strong>{user.userName ?? 'Не указан'}</strong>
               </div>
               <div>

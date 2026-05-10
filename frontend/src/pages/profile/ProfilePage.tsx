@@ -88,7 +88,7 @@ export function ProfilePage() {
           </div>
           <div className="profile-facts">
             <div className="profile-facts__item">
-              <span>Username</span>
+              <span>ФИО</span>
               <strong>{user?.userName ?? 'Не указан'}</strong>
             </div>
             <div className="profile-facts__item">

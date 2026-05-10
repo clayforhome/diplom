@@ -4,8 +4,10 @@ import type {
   CreateMeetingRequest,
   InviteParticipantsRequest,
   MeetingDetail,
+  MeetingFormat,
   MeetingStatus,
   MeetingSummary,
+  OrganizerUser,
   PaginatedResponse,
   Participant,
   RespondInvitationRequest,
@@ -13,6 +15,16 @@ import type {
 } from '../types';
 
 export const sessionsService = {
+  getMeetingFormats(): Promise<MeetingFormat[]> {
+    return httpClient
+      .get<{ meetingFormats: MeetingFormat[] }>('/meeting-formats')
+      .then((response) => response.meetingFormats);
+  },
+  getOrganizerUsers(): Promise<OrganizerUser[]> {
+    return httpClient
+      .get<{ users: OrganizerUser[] }>('/organizer/users')
+      .then((response) => response.users);
+  },
   listMeetings(params: { page: number; limit: number; status?: MeetingStatus }): Promise<PaginatedResponse<MeetingSummary>> {
     const search = new URLSearchParams({
       page: String(params.page),
