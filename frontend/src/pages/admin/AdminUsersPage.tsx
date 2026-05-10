@@ -35,7 +35,7 @@ export function AdminUsersPage() {
   const toast = useToast();
 
   useEffect(() => {
-    document.title = 'Управление пользователями - Meeting Management System';
+    document.title = 'Управление пользователями - Система управления встречами';
   }, []);
 
   useEffect(() => {
@@ -181,7 +181,7 @@ export function AdminUsersPage() {
             options={[
               { value: 'name', label: 'Имя' },
               { value: 'userName', label: 'ФИО' },
-              { value: 'email', label: 'Email' },
+              { value: 'email', label: 'Эл. почта' },
               { value: 'age', label: 'Возраст' },
               { value: 'registrationDate', label: 'Дате регистрации' },
               { value: 'emailConfirmed', label: 'Подтверждению email' },
@@ -231,7 +231,7 @@ export function AdminUsersPage() {
               </div>
               <div>
                 <h3>{getDisplayName(user.name, user.userName, user.email)}</h3>
-                <p>{user.email ?? 'Email не указан'}</p>
+                <p>{user.email ?? 'Эл. почта не указана'}</p>
               </div>
             </div>
 

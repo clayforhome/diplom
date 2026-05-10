@@ -67,7 +67,7 @@ export function SessionDetailPage() {
   }, [dispatch, id]);
 
   useEffect(() => {
-    document.title = meeting ? `${meeting.title} - Meeting Management System` : 'Встреча - Meeting Management System';
+    document.title = meeting ? `${meeting.title} - Система управления встречами` : 'Встреча - Система управления встречами';
   }, [meeting]);
 
   if (!id || !meeting) {

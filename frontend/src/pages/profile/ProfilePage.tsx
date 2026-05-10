@@ -23,7 +23,7 @@ export function ProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
-    document.title = 'Мой профиль - Meeting Management System';
+    document.title = 'Мой профиль - Система управления встречами';
   }, []);
 
   const handleChangePassword = async () => {
@@ -62,7 +62,7 @@ export function ProfilePage() {
           <div>
             <span className="profile-hero__eyebrow">Снимок аккаунта</span>
             <h2>{displayName}</h2>
-            <p>{user?.email ?? 'Email не указан'}</p>
+            <p>{user?.email ?? 'Эл. почта не указана'}</p>
           </div>
         </div>
         <div className="profile-hero__meta">
@@ -89,8 +89,8 @@ export function ProfilePage() {
               <strong>{user?.userName ?? 'Не указано'}</strong>
             </div>
             <div className="profile-facts__item">
-              <span>Email</span>
-              <strong>{user?.email ?? 'Не указан'}</strong>
+              <span>Эл. почта</span>
+              <strong>{user?.email ?? 'Не указана'}</strong>
             </div>
             <div className="profile-facts__item">
               <span>Возраст</span>

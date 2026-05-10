@@ -39,7 +39,7 @@ export function DashboardPage() {
   ];
 
   useEffect(() => {
-    document.title = 'Главная - Meeting Management System';
+    document.title = 'Главная - Система управления встречами';
   }, []);
 
   useEffect(() => {

@@ -90,6 +90,10 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
+function isApiEnvelope<T>(payload: unknown): payload is ApiEnvelope<T> {
+  return typeof payload === 'object' && payload !== null && 'data' in payload && 'status' in payload;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = jwtService.getToken();
   const headers = new Headers(init?.headers);
@@ -110,8 +114,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers
     });
 
-    const envelope = await parseResponse<ApiEnvelope<T>>(response);
-    return envelope.data;
+    const payload = await parseResponse<ApiEnvelope<T> | T>(response);
+    return isApiEnvelope<T>(payload) ? payload.data : payload;
   } finally {
     requestActivityHandlers.onRequestEnd?.();
   }

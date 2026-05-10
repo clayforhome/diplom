@@ -18,7 +18,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
 
   useEffect(() => {
-    document.title = 'Вход - Meeting Management System';
+    document.title = 'Вход - Система управления встречами';
   }, []);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function LoginPage() {
             <span className="auth-page__eyebrow">Безопасный вход</span>
             <h1 className="auth-page__title">Войдите в систему встреч</h1>
           </div>
-          <Input label="Email или логин" value={login} onChange={(event) => setLogin(event.target.value)} required />
+          <Input label="Эл. почта или логин" value={login} onChange={(event) => setLogin(event.target.value)} required />
           <Input label="Пароль" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
           <Button type="submit" fullWidth disabled={isLoading}>
             Войти

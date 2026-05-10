@@ -33,7 +33,7 @@ export function Header() {
     <header className="app-header">
       <div className="app-header__brand">
         <div className="app-header__brand-copy">
-          <span className="app-header__eyebrow">Meeting Management System</span>
+          <span className="app-header__eyebrow">Система управления встречами</span>
           <strong className="app-header__title">Центр управления</strong>
         </div>
       </div>

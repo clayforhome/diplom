@@ -156,7 +156,7 @@ export function RegisterPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
-    document.title = 'Регистрация - Meeting Management System';
+    document.title = 'Регистрация - Система управления встречами';
   }, []);
 
   useEffect(() => {
@@ -211,7 +211,7 @@ export function RegisterPage() {
             <h1 className="auth-page__title">Создайте рабочий профиль</h1>
           </div>
           <Input label="Имя" value={form.name} error={errors.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
-          <Input label="Email" type="email" value={form.email} error={errors.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
+          <Input label="Эл. почта" type="email" value={form.email} error={errors.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
           <Input label="Пароль" type="password" value={form.password} error={errors.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} required />
           <Input
             label="Телефон"

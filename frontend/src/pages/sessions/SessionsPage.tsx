@@ -9,8 +9,8 @@ import { checkAvailabilityThunk, clearAvailability, fetchMeetingsThunk } from '.
 import { sessionsService } from '../../http/sessionsService';
 import { useToast } from '../../hooks/useToast';
 import { toDateTimeString } from '../../utils/format';
-import { getMeetingStatusLabel } from '../../utils/meetingLabels';
-import type { MeetingFormValues, MeetingStatus } from '../../types';
+import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../utils/meetingLabels';
+import type { MeetingFormValues, MeetingFormat, MeetingStatus } from '../../types';
 
 const initialFormValues: MeetingFormValues = {
   title: '',
@@ -31,21 +31,33 @@ export function SessionsPage() {
   const { meetings, availability } = useAppSelector((state) => state.sessions);
   const { roles } = useAppSelector((state) => state.auth);
   const [status, setStatus] = useState<MeetingStatus | 'All'>('All');
+  const [format, setFormat] = useState<MeetingFormat | 'All'>('All');
   const [statusOptions, setStatusOptions] = useState<MeetingStatus[]>([]);
+  const [formatOptions, setFormatOptions] = useState<MeetingFormat[]>([]);
 
   const canManageMeetings = useMemo(() => roles.includes('Organizer') || roles.includes('Admin'), [roles]);
 
   useEffect(() => {
-    document.title = 'Расписание встреч - Meeting Management System';
+    document.title = 'Расписание встреч - Система управления встречами';
   }, []);
 
   useEffect(() => {
     void sessionsService.getMeetingStatuses().then(setStatusOptions);
+    void sessionsService.getMeetingFormats().then(setFormatOptions);
+
   }, []);
 
   useEffect(() => {
     void dispatch(fetchMeetingsThunk({ page: 1, limit: 12, status: status === 'All' ? undefined : status }));
   }, [dispatch, status]);
+
+  const filteredMeetings = useMemo(() => {
+    if (format === 'All') {
+      return meetings;
+    }
+
+    return meetings.filter((meeting) => meeting.format === format);
+  }, [format, meetings]);
 
   return (
     <PageSection title="Встречи" subtitle="Список ваших встреч и операций с ними">
@@ -109,15 +121,29 @@ export function SessionsPage() {
             ]}
           />
         </div>
+        <div className="sessions-page__filter">
+          <Select
+            label="Фильтр по формату"
+            value={format}
+            onChange={(value) => setFormat(value as MeetingFormat | 'All')}
+            options={[
+              { value: 'All', label: 'Все форматы' },
+              ...formatOptions.map((meetingFormat) => ({
+                value: meetingFormat,
+                label: getMeetingFormatLabel(meetingFormat)
+              }))
+            ]}
+          />
+        </div>
       </div>
-      {meetings.length > 0 ? (
+      {filteredMeetings.length > 0 ? (
         <div className="meeting-grid">
-          {meetings.map((meeting) => (
+          {filteredMeetings.map((meeting) => (
             <MeetingCard key={meeting.id} meeting={meeting} />
           ))}
         </div>
       ) : (
-        <EmptyState title="Встреч пока нет" description="Создайте первую встречу или дождитесь приглашения от организатора." />
+        <EmptyState title="Встречи не найдены" description="Попробуйте изменить фильтры или создайте новую встречу." />
       )}
     </PageSection>
   );

@@ -4,7 +4,7 @@ import { PageSection } from '../../components/layout/PageSection/PageSection';
 
 export function AdminDashboardPage() {
   useEffect(() => {
-    document.title = 'Панель администратора - Meeting Management System';
+    document.title = 'Панель администратора - Система управления встречами';
   }, []);
 
   return (
