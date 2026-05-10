@@ -45,7 +45,6 @@ export function LoginPage() {
           }}
         >
           <div className="auth-page__hero">
-            <span className="auth-page__eyebrow">Безопасный вход</span>
             <h1 className="auth-page__title">Войдите в систему встреч</h1>
           </div>
           <Input label="Эл. почта или логин" value={login} onChange={(event) => setLogin(event.target.value)} required />
