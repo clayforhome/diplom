@@ -8,8 +8,8 @@
 .admin-user-card__top,
 .admin-user-card__facts,
 .admin-user-card__facts > div,
-.admin-user-card__reset,
-.admin-user-card__danger {
+.admin-user-card__actions,
+.admin-user-card__buttons {
   display: flex;
 }
 
@@ -149,19 +149,20 @@
   overflow-wrap: anywhere;
 }
 
-.admin-user-card__reset {
-  align-items: flex-end;
-  gap: 1rem;
+.admin-user-card__actions {
+  flex-direction: column;
+  gap: 0.85rem;
   margin-top: auto;
   padding-top: 0.25rem;
 }
 
-.admin-user-card__reset .input-field {
+.admin-user-card__actions .input-field {
   flex: 1 1 auto;
 }
 
-.admin-user-card__danger {
-  justify-content: flex-end;
+.admin-user-card__buttons {
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .admin-users-pagination {
@@ -186,8 +187,6 @@
   .admin-users-hero,
   .admin-users-toolbar,
   .admin-users-toolbar__sort,
-  .admin-user-card__reset,
-  .admin-user-card__danger,
   .admin-users-page-meta,
   .admin-users-pagination {
     flex-direction: column;

@@ -258,7 +258,7 @@ export function AdminUsersPage() {
               </div>
             </div>
 
-            <div className="admin-user-card__reset">
+            <div className="admin-user-card__actions">
               <Input
                 label="Новый пароль"
                 type="password"
@@ -266,15 +266,14 @@ export function AdminUsersPage() {
                 onChange={(event) => setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))}
                 placeholder="Введите пароль для сброса"
               />
-              <Button variant="secondary" onClick={() => void handleResetPassword(user.id)} disabled={activeResetUserId === user.id}>
-                Сбросить пароль
-              </Button>
-            </div>
-
-            <div className="admin-user-card__danger">
-              <Button variant="danger" onClick={() => void handleDeleteUser(user.id)} disabled={activeDeleteUserId === user.id}>
-                Удалить аккаунт
-              </Button>
+              <div className="admin-user-card__buttons">
+                <Button variant="secondary" onClick={() => void handleResetPassword(user.id)} disabled={activeResetUserId === user.id}>
+                  Сбросить пароль
+                </Button>
+                <Button variant="danger" onClick={() => void handleDeleteUser(user.id)} disabled={activeDeleteUserId === user.id}>
+                  Удалить аккаунт
+                </Button>
+              </div>
             </div>
           </article>
         ))}
