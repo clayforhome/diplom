@@ -7,4 +7,3 @@ public enum MeetingFormat
     Hybrid,
     Phone
 }
-

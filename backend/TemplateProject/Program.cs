@@ -222,6 +222,7 @@ async Task<User> EnsureUserAsync(UserManager<User> userManager, string email, st
         UserName = email,
         Email = email,
         EmailConfirmed = true,
+        RegistrationDate = TimeProvider.System.GetUtcNow().Date
     };
 
     await userManager.CreateAsync(user, password);
