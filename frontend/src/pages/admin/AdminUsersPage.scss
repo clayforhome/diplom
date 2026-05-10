@@ -4,7 +4,6 @@
 .admin-users-page-meta,
 .admin-users-pagination,
 .admin-users-pagination__status,
-.admin-users-grid,
 .admin-user-card,
 .admin-user-card__top,
 .admin-user-card__facts,
@@ -83,9 +82,10 @@
 }
 
 .admin-users-grid {
-  align-items: stretch;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 22rem));
   gap: 1rem;
+  justify-content: start;
 }
 
 .admin-users-page-meta {
@@ -97,7 +97,7 @@
 }
 
 .admin-user-card {
-  flex: 1 1 22rem;
+  width: 22rem;
   min-height: 100%;
   flex-direction: column;
   gap: 1.2rem;
@@ -194,8 +194,16 @@
     align-items: stretch;
   }
 
+  .admin-users-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .admin-users-hero__meta,
   .admin-users-toolbar__sort > * {
     min-width: 0;
+  }
+
+  .admin-user-card {
+    width: 100%;
   }
 }
