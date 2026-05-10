@@ -259,9 +259,10 @@ async Task<User> EnsureUserAsync(UserManager<User> userManager, string email, st
     user = new User
     {
         Id = Guid.NewGuid(),
-        UserName = fullName,
+        UserName = email,
         Email = email,
         EmailConfirmed = true,
+        Name = fullName,
         RegistrationDate = TimeProvider.System.GetUtcNow().Date,
         Age = 25
     };

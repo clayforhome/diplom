@@ -53,7 +53,7 @@ public class GetUsersForOrganizerQuery : IFeatureEndpoint
                 {
                     Id = x.Id,
                     Email = x.Email!,
-                    Name = x.UserName!
+                    Name = x.Name!
                 })
                 .ToListAsync(cancellationToken);
 
