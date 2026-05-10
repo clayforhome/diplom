@@ -35,16 +35,13 @@ builder.Services.AddDbContext<DatabaseContext>((sp, opt) =>
 builder.Services.Configure<ForwardedHeadersOptions>(opt =>
 {
     opt.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    opt.KnownProxies.Add(IPAddress.Parse("127.0.0.1"));// for localhost
-    opt.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("172.16.0.0"), 12));// for docker env
+    opt.KnownProxies.Add(IPAddress.Parse("127.0.0.1")); // for localhost
+    opt.KnownNetworks.Add(new IPNetwork(IPAddress.Parse("172.16.0.0"), 12)); // for docker env
 });
 
 builder.Services.AddControllers();
 
-builder.Services.AddMediatR(opt =>
-{
-    opt.RegisterServicesFromAssemblyContaining<Program>();
-});
+builder.Services.AddMediatR(opt => { opt.RegisterServicesFromAssemblyContaining<Program>(); });
 builder.Services.AddOpenApi(opt =>
 {
     opt.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
@@ -89,6 +86,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Token = accessToken;
                 }
+
                 return Task.CompletedTask;
             }
         };
@@ -111,11 +109,11 @@ app.UseMiddleware<ExceptionFilterMiddleware>();
 using (var scope = app.Services.CreateScope())
 {
     var serviceProvider = scope.ServiceProvider;
-    
+
     var context = serviceProvider.GetRequiredService<DatabaseContext>();
 
     context.Database.Migrate();
-    
+
     await SetupInitialDataAsync(scope, app.Configuration, context);
 }
 
@@ -132,10 +130,11 @@ app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/openapi/v1.json", "TemplateProject API V1");
-    });
+    app.UseCors(c =>
+        c.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+    app.UseSwaggerUI(c => { c.SwaggerEndpoint("/openapi/v1.json", "TemplateProject API V1"); });
     app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 }
 
@@ -161,7 +160,7 @@ void RegisterFeatureEndpoints(WebApplication webApplication)
         var groupMap = webApplication
             .MapGroup("")
             .AddEndpointFilter<BaseResponseFilter>();
-        
+
         featureEndpoint.Map(groupMap);
     }
 }
@@ -170,13 +169,13 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
 {
     var adminLogin = configuration.GetValue<string>("AdminCredentials:Email")!;
     var adminPassword = configuration.GetValue<string>("AdminCredentials:Password")!;
-    
+
     var userLogin = configuration.GetValue<string>("UserCredentials:Email")!;
     var userPassword = configuration.GetValue<string>("UserCredentials:Password")!;
-    
+
     var organizerLogin = configuration.GetValue<string>("OrganizerCredentials:Email")!;
     var organizerPassword = configuration.GetValue<string>("OrganizerCredentials:Password")!;
-    
+
     var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
     var adminUser = await userManager.FindByEmailAsync(adminLogin);
@@ -185,14 +184,14 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
     {
         return;
     }
-    
+
     var userUser = await userManager.FindByEmailAsync(userLogin);
 
     if (userUser != null)
     {
         return;
     }
-    
+
     var organizerUser = await userManager.FindByEmailAsync(organizerLogin);
 
     if (organizerUser != null)
@@ -206,14 +205,14 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
         Email = adminLogin,
         EmailConfirmed = true,
     };
-    
+
     userUser = new User
     {
         UserName = userLogin,
         Email = userLogin,
         EmailConfirmed = true,
     };
-    
+
     organizerUser = new User
     {
         UserName = organizerLogin,
@@ -235,13 +234,13 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
     {
         Name = Role.Organizer,
     });
-    
+
     await userManager.CreateAsync(adminUser, adminPassword);
     await userManager.AddToRoleAsync(adminUser, Role.Admin);
-    
+
     await userManager.CreateAsync(userUser, userPassword);
     await userManager.AddToRoleAsync(userUser, Role.User);
-    
+
     await userManager.CreateAsync(organizerUser, organizerPassword);
     await userManager.AddToRoleAsync(organizerUser, Role.Admin);
 

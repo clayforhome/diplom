@@ -12,7 +12,7 @@ public class GetUserQuery : IFeatureEndpoint
 {
     public void Map(IEndpointRouteBuilder endpointRouteBuilder)
     {
-        endpointRouteBuilder.MapGet("/api/v1/users", async (
+        endpointRouteBuilder.MapGet("/api/v1/user", async (
                 IMediator mediator,
                 CancellationToken cancellationToken) =>
             {
