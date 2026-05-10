@@ -11,20 +11,23 @@ const avatarPalette = [
 
 type AvatarPaletteItem = (typeof avatarPalette)[number];
 
+function getFioSource(name?: string | null, userName?: string | null, email?: string | null): string {
+  return userName?.trim() || name?.trim() || email?.trim() || 'Пользователь';
+}
+
 export function getDisplayName(name?: string | null, userName?: string | null, email?: string | null): string {
-  return name ?? userName ?? email ?? 'Пользователь';
+  return getFioSource(name, userName, email);
 }
 
 export function getProfileInitials(name?: string | null, userName?: string | null, email?: string | null): string {
-  const displayName = getDisplayName(name, userName, email);
-  const initials = displayName
-    .split(/\s+/)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const fio = getFioSource(name, userName, email);
+  const parts = fio.split(/\s+/).filter(Boolean);
 
-  return initials || 'U';
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase() || 'U';
+  }
+
+  return parts[0]?.slice(0, 2).toUpperCase() || 'U';
 }
 
 function getAvatarSessionKey(identity: string) {

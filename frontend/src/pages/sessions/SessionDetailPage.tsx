@@ -11,7 +11,8 @@ import { fetchMeetingThunk, fetchParticipantsThunk } from '../../store/slices/se
 import { sessionsService } from '../../http/sessionsService';
 import { useToast } from '../../hooks/useToast';
 import { formatDate, formatDateTimeRange, toDateTimeString } from '../../utils/format';
-import type { MeetingFormValues } from '../../types';
+import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../utils/meetingLabels';
+import type { MeetingFormValues, MeetingStatus } from '../../types';
 
 function getFormValues(meeting?: {
   title?: string;
@@ -20,6 +21,7 @@ function getFormValues(meeting?: {
   startTime?: string;
   endTime?: string;
   format?: 'Offline' | 'Online' | 'Hybrid' | 'Phone';
+  status?: MeetingStatus;
   location?: string | null;
   meetingLink?: string | null;
   contactInfo?: string | null;
@@ -27,6 +29,7 @@ function getFormValues(meeting?: {
   const date = meeting?.date ? new Date(meeting.date).toISOString().slice(0, 10) : '';
   const startTime = meeting?.startTime ? new Date(meeting.startTime).toISOString().slice(11, 16) : '';
   const endTime = meeting?.endTime ? new Date(meeting.endTime).toISOString().slice(11, 16) : '';
+
   return {
     title: meeting?.title ?? '',
     description: meeting?.description ?? '',
@@ -34,6 +37,7 @@ function getFormValues(meeting?: {
     startTime,
     endTime,
     format: meeting?.format ?? 'Offline',
+    status: meeting?.status,
     location: meeting?.location ?? '',
     meetingLink: meeting?.meetingLink ?? '',
     contactInfo: meeting?.contactInfo ?? '',
@@ -57,6 +61,7 @@ export function SessionDetailPage() {
     if (!id) {
       return;
     }
+
     void dispatch(fetchMeetingThunk(id));
     void dispatch(fetchParticipantsThunk(id));
   }, [dispatch, id]);
@@ -75,13 +80,13 @@ export function SessionDetailPage() {
         <Card>
           <div className="detail-grid__summary">
             <div className="detail-grid__badges">
-              <Badge tone="info">{meeting.format}</Badge>
-              <Badge>{meeting.status}</Badge>
+              <Badge tone="info">{getMeetingFormatLabel(meeting.format)}</Badge>
+              <Badge>{getMeetingStatusLabel(meeting.status)}</Badge>
             </div>
             <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
-            <p>Location: {meeting.location || 'Не указана'}</p>
-            <p>Meeting link: {meeting.meetingLink || 'Не указана'}</p>
-            <p>Contact info: {meeting.contactInfo || 'Не указана'}</p>
+            <p>Локация: {meeting.location || 'Не указана'}</p>
+            <p>Ссылка на встречу: {meeting.meetingLink || 'Не указана'}</p>
+            <p>Контактная информация: {meeting.contactInfo || 'Не указана'}</p>
             <p>Участников: {meeting.participantCount}</p>
             <p>Файлов: {meeting.fileCount}</p>
           </div>
@@ -98,6 +103,7 @@ export function SessionDetailPage() {
                 startTime: toDateTimeString(values.date, values.startTime),
                 endTime: toDateTimeString(values.date, values.endTime),
                 format: values.format,
+                status: values.status,
                 location: values.location,
                 meetingLink: values.meetingLink,
                 contactInfo: values.contactInfo
@@ -115,6 +121,7 @@ export function SessionDetailPage() {
             if (!auth.user?.id) {
               return;
             }
+
             await sessionsService.respondToInvitation(id, auth.user.id, { status, comment });
             toast('Ответ на приглашение сохранён', 'success');
             await dispatch(fetchParticipantsThunk(id)).unwrap();
@@ -150,7 +157,7 @@ export function SessionDetailPage() {
                 navigate('/sessions');
               }}
             >
-              Soft delete встречи
+              Удалить встречу
             </button>
           </Card>
         ) : null}

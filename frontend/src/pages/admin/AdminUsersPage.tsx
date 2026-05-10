@@ -50,7 +50,7 @@ export function AdminUsersPage() {
         setPage(response.page);
         setPageSize(response.pageSize);
       })
-      .catch(() => setError('Backend вернул ошибку при попытке получить список пользователей.'))
+      .catch(() => setError('Не удалось получить список пользователей с сервера.'))
       .finally(() => setIsLoading(false));
   }, [page, pageSize]);
 
@@ -110,7 +110,7 @@ export function AdminUsersPage() {
       setPage(response.page);
       setPageSize(response.pageSize);
     } catch {
-      setError('Backend вернул ошибку при попытке получить список пользователей.');
+      setError('Не удалось получить список пользователей с сервера.');
     } finally {
       setIsLoading(false);
     }
@@ -156,12 +156,12 @@ export function AdminUsersPage() {
   };
 
   return (
-    <PageSection title="Пользователи" subtitle="Список пользователей для роли Admin">
+    <PageSection title="Пользователи" subtitle="Список пользователей для роли администратор">
       <div className="admin-users-hero">
         <div>
-          <span className="admin-users-hero__eyebrow">Server-backed workspace</span>
+          <span className="admin-users-hero__eyebrow">Рабочее пространство с серверными данными</span>
           <h2>Поиск, сортировка и постраничный обзор пользователей</h2>
-          <p>Теперь список использует серверные `page/limit/total`, а поиск и сортировки остаются удобной клиентской надстройкой над текущей страницей.</p>
+          <p>Список использует серверные `page/limit/total`, а поиск и сортировка остаются удобной клиентской надстройкой над текущей страницей.</p>
         </div>
         <div className="admin-users-hero__meta">
           <strong>{total}</strong>
@@ -171,7 +171,7 @@ export function AdminUsersPage() {
 
       <div className="admin-users-toolbar">
         <div className="admin-users-toolbar__search">
-          <Input label="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Имя, email, username, возраст, дата, подтверждение, id" />
+          <Input label="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Имя, email, ФИО, возраст, дата, подтверждение, id" />
         </div>
         <div className="admin-users-toolbar__sort">
           <Select
@@ -180,7 +180,7 @@ export function AdminUsersPage() {
             onChange={(value) => setSortKey(value as SortKey)}
             options={[
               { value: 'name', label: 'Имя' },
-              { value: 'userName', label: 'Username' },
+              { value: 'userName', label: 'ФИО' },
               { value: 'email', label: 'Email' },
               { value: 'age', label: 'Возраст' },
               { value: 'registrationDate', label: 'Дате регистрации' },
@@ -237,8 +237,8 @@ export function AdminUsersPage() {
 
             <div className="admin-user-card__facts">
               <div>
-                <span>Username</span>
-                <strong>{user.userName ?? 'Не указан'}</strong>
+                <span>ФИО</span>
+                <strong>{user.userName ?? 'Не указано'}</strong>
               </div>
               <div>
                 <span>Возраст</span>
@@ -249,7 +249,7 @@ export function AdminUsersPage() {
                 <strong>{user.registrationDate ? formatDate(user.registrationDate) : 'Неизвестно'}</strong>
               </div>
               <div>
-                <span>Email confirmed</span>
+                <span>Email подтверждён</span>
                 <strong>{user.emailConfirmed ? 'Да' : 'Нет'}</strong>
               </div>
               <div>

@@ -3,6 +3,7 @@ import { Badge } from '../../ui/Badge/Badge';
 import { Card } from '../../ui/Card/Card';
 import type { MeetingSummary } from '../../../types';
 import { formatDate, formatDateTimeRange } from '../../../utils/format';
+import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../../utils/meetingLabels';
 import './MeetingCard.scss';
 
 function resolveTone(status: MeetingSummary['status']) {
@@ -18,8 +19,8 @@ export function MeetingCard({ meeting }: { meeting: MeetingSummary }) {
     <Card>
       <article className="meeting-card">
         <div className="meeting-card__meta">
-          <Badge tone={resolveTone(meeting.status)}>{meeting.status}</Badge>
-          <Badge>{meeting.format}</Badge>
+          <Badge tone={resolveTone(meeting.status)}>{getMeetingStatusLabel(meeting.status)}</Badge>
+          <Badge>{getMeetingFormatLabel(meeting.format)}</Badge>
         </div>
         <h3 className="meeting-card__title">{meeting.title}</h3>
         <p className="meeting-card__description">{meeting.description || 'Описание пока не добавлено.'}</p>

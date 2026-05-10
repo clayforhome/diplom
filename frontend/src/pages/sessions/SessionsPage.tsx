@@ -9,6 +9,7 @@ import { checkAvailabilityThunk, clearAvailability, fetchMeetingsThunk } from '.
 import { sessionsService } from '../../http/sessionsService';
 import { useToast } from '../../hooks/useToast';
 import { toDateTimeString } from '../../utils/format';
+import { getMeetingStatusLabel } from '../../utils/meetingLabels';
 import type { MeetingFormValues, MeetingStatus } from '../../types';
 
 const initialFormValues: MeetingFormValues = {
@@ -30,6 +31,7 @@ export function SessionsPage() {
   const { meetings, availability } = useAppSelector((state) => state.sessions);
   const { roles } = useAppSelector((state) => state.auth);
   const [status, setStatus] = useState<MeetingStatus | 'All'>('All');
+  const [statusOptions, setStatusOptions] = useState<MeetingStatus[]>([]);
 
   const canManageMeetings = useMemo(() => roles.includes('Organizer') || roles.includes('Admin'), [roles]);
 
@@ -38,33 +40,15 @@ export function SessionsPage() {
   }, []);
 
   useEffect(() => {
+    void sessionsService.getMeetingStatuses().then(setStatusOptions);
+  }, []);
+
+  useEffect(() => {
     void dispatch(fetchMeetingsThunk({ page: 1, limit: 12, status: status === 'All' ? undefined : status }));
   }, [dispatch, status]);
 
   return (
-    <PageSection
-      title="Встречи"
-      subtitle="Список ваших встреч и операций с ними"
-      actions={
-        <div className="sessions-page__filter">
-          <Select
-            label="Фильтр по статусу"
-            value={status}
-            onChange={(value) => setStatus(value as MeetingStatus | 'All')}
-            options={[
-              { value: 'All', label: 'All' },
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Scheduled', label: 'Scheduled' },
-              { value: 'AwaitingConfirmation', label: 'AwaitingConfirmation' },
-              { value: 'Confirmed', label: 'Confirmed' },
-              { value: 'Rescheduled', label: 'Rescheduled' },
-              { value: 'Cancelled', label: 'Cancelled' },
-              { value: 'Completed', label: 'Completed' }
-            ]}
-          />
-        </div>
-      }
-    >
+    <PageSection title="Встречи" subtitle="Список ваших встреч и операций с ними">
       {canManageMeetings ? (
         <MeetingForm
           initialValues={initialFormValues}
@@ -109,6 +93,23 @@ export function SessionsPage() {
             : null}
         </div>
       ) : null}
+      <div className="sessions-page__meetings-header">
+        <h2 className="sessions-page__meetings-title">Все встречи</h2>
+        <div className="sessions-page__filter">
+          <Select
+            label="Фильтр по статусу"
+            value={status}
+            onChange={(value) => setStatus(value as MeetingStatus | 'All')}
+            options={[
+              { value: 'All', label: 'Все статусы' },
+              ...statusOptions.map((meetingStatus) => ({
+                value: meetingStatus,
+                label: getMeetingStatusLabel(meetingStatus)
+              }))
+            ]}
+          />
+        </div>
+      </div>
       {meetings.length > 0 ? (
         <div className="meeting-grid">
           {meetings.map((meeting) => (
