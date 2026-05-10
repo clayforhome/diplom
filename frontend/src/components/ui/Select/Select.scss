@@ -1,0 +1,21 @@
+.select-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.select-field__label {
+  color: $text-primary;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.select-field__control {
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid $border-color;
+  border-radius: 0.9rem;
+  background: $bg-primary;
+  color: $text-primary;
+  font: inherit;
+}

@@ -1,0 +1,15 @@
+import './EmptyState.scss';
+
+interface EmptyStateProps {
+  title: string;
+  description: string;
+}
+
+export function EmptyState({ title, description }: EmptyStateProps) {
+  return (
+    <div className="empty-state">
+      <h3 className="empty-state__title">{title}</h3>
+      <p className="empty-state__description">{description}</p>
+    </div>
+  );
+}

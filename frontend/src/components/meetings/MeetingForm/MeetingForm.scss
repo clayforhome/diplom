@@ -1,0 +1,27 @@
+.meeting-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.meeting-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.meeting-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+@media (max-width: 720px) {
+  .meeting-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .meeting-form__actions {
+    flex-direction: column;
+  }
+}

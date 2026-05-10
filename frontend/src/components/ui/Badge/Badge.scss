@@ -1,0 +1,14 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badge--neutral { background: $bg-secondary; color: $text-secondary; }
+.badge--success { background: $success-surface; color: $color-success; }
+.badge--warning { background: $warning-surface; color: $color-warning; }
+.badge--danger { background: $error-surface; color: $color-error; }
+.badge--info { background: $accent-surface; color: $color-accent; }

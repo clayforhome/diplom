@@ -1,0 +1,21 @@
+.page-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-section__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-section__title {
+  margin: 0;
+}
+
+.page-section__subtitle {
+  margin: 0.4rem 0 0;
+  color: $text-secondary;
+}

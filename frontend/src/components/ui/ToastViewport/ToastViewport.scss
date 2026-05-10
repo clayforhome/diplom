@@ -1,0 +1,21 @@
+.toast-viewport {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.toast-viewport__item {
+  min-width: 16rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  box-shadow: $shadow-soft;
+  color: $color-white;
+}
+
+.toast-viewport__item--success { background: $color-success; }
+.toast-viewport__item--error { background: $color-error; }
+.toast-viewport__item--info { background: $text-primary; }

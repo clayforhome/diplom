@@ -1,0 +1,100 @@
+import { jwtService } from '../utils/jwt';
+import type { ApiEnvelope, ApiErrorPayload } from '../types';
+
+const API_URL = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_PATH}`;
+
+export class ApiError extends Error {
+  statusCode: number;
+  errors?: Record<string, string[]>;
+  details?: string[];
+  code?: string;
+
+  constructor(statusCode: number, payload: ApiErrorPayload) {
+    super(resolveApiErrorMessage(statusCode, payload));
+    this.statusCode = statusCode;
+    this.errors = payload.errors;
+    this.details = payload.Errors;
+    this.code = payload.code;
+  }
+}
+
+function resolveApiErrorMessage(statusCode: number, payload: ApiErrorPayload): string {
+  if (payload.message?.trim()) {
+    return payload.message;
+  }
+
+  if (payload.detail?.trim()) {
+    return payload.detail;
+  }
+
+  if (payload.title?.trim()) {
+    return payload.title;
+  }
+
+  if (Array.isArray(payload.Errors) && payload.Errors.length > 0) {
+    return payload.Errors.join('\n');
+  }
+
+  if (payload.errors) {
+    const messages = Object.values(payload.errors).flat();
+    if (messages.length > 0) {
+      return messages.join('\n');
+    }
+  }
+
+  return `HTTP ${statusCode}`;
+}
+
+async function parseResponse<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get('content-type') ?? '';
+  const isJson = contentType.includes('application/json');
+  const payload = isJson ? ((await response.json()) as ApiErrorPayload | ApiEnvelope<T>) : null;
+
+  if (!response.ok) {
+    throw new ApiError(response.status, (payload as ApiErrorPayload | null) ?? { message: `HTTP ${response.status}` });
+  }
+
+  return payload as T;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = jwtService.getToken();
+  const headers = new Headers(init?.headers);
+
+  if (!(init?.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...init,
+    headers
+  });
+
+  const envelope = await parseResponse<ApiEnvelope<T>>(response);
+  return envelope.data;
+}
+
+export const httpClient = {
+  get<T>(path: string): Promise<T> {
+    return request<T>(path, { method: 'GET' });
+  },
+  post<T>(path: string, body?: unknown): Promise<T> {
+    return request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined });
+  },
+  patch<T>(path: string, body?: unknown): Promise<T> {
+    return request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined });
+  },
+  put<T>(path: string, body?: unknown): Promise<T> {
+    return request<T>(path, { method: 'PUT', body: body ? JSON.stringify(body) : undefined });
+  },
+  delete<T>(path: string): Promise<T> {
+    return request<T>(path, { method: 'DELETE' });
+  },
+  postForm<T>(path: string, body: FormData): Promise<T> {
+    return request<T>(path, { method: 'POST', body });
+  }
+};

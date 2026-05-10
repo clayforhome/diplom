@@ -1,0 +1,121 @@
+@import './variables.scss';
+@import './mixins.scss';
+
+@import '../components/ui/Button/Button.scss';
+@import '../components/ui/Input/Input.scss';
+@import '../components/ui/Select/Select.scss';
+@import '../components/ui/Textarea/Textarea.scss';
+@import '../components/ui/Badge/Badge.scss';
+@import '../components/ui/Card/Card.scss';
+@import '../components/ui/EmptyState/EmptyState.scss';
+@import '../components/ui/Spinner/Spinner.scss';
+@import '../components/ui/ToastViewport/ToastViewport.scss';
+@import '../components/layout/Header/Header.scss';
+@import '../components/layout/AppShell/AppShell.scss';
+@import '../components/layout/PageSection/PageSection.scss';
+@import '../components/meetings/MeetingCard/MeetingCard.scss';
+@import '../components/meetings/MeetingForm/MeetingForm.scss';
+@import '../components/meetings/ParticipantsPanel/ParticipantsPanel.scss';
+@import '../pages/auth/AuthPage.scss';
+
+:root {
+  font-family: $font-family-base;
+  color: $text-primary;
+  background: $bg-secondary;
+  line-height: 1.5;
+  font-weight: 400;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: $bg-secondary;
+}
+
+a {
+  color: $color-accent;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+.meeting-grid,
+.dashboard-grid,
+.detail-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.meeting-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.dashboard-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.detail-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-grid__badges,
+.detail-grid__badges,
+.availability-box,
+.profile-stack,
+.detail-grid__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.availability-box {
+  padding: 1rem 1.25rem;
+  border: 1px solid $border-color;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.sessions-page__filter {
+  min-width: 13.75rem;
+}
+
+.detail-grid__delete-button {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 0.9rem;
+  background: $color-error;
+  color: $color-white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

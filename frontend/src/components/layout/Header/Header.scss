@@ -1,0 +1,61 @@
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 1.5rem;
+  backdrop-filter: saturate(180%) blur(20px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: $shadow-soft;
+}
+
+.app-header__brand,
+.app-header__actions,
+.app-header__user {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header__eyebrow,
+.app-header__user-role {
+  font-size: 0.78rem;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.app-header__title,
+.app-header__user-name {
+  color: $text-primary;
+}
+
+.app-header__nav {
+  display: flex;
+  gap: 1rem;
+
+  a {
+    color: $text-secondary;
+    font-weight: 600;
+  }
+
+  .active {
+    color: $text-primary;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-header__nav {
+    flex-wrap: wrap;
+  }
+}

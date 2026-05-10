@@ -1,0 +1,20 @@
+.app-shell {
+  min-height: 100vh;
+  position: relative;
+}
+
+.app-shell__gradient {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(0, 113, 227, 0.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(52, 199, 89, 0.12), transparent 26%),
+    linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
+  z-index: -1;
+}
+
+.app-shell__container {
+  width: min(1200px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}

@@ -1,0 +1,48 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.875rem;
+  padding: 0 1.1rem;
+  border-radius: 0.875rem;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.button--primary {
+  background: $color-accent;
+  color: $color-white;
+
+  &:hover {
+    background: $color-accent-hover;
+  }
+}
+
+.button--secondary {
+  background: $bg-primary;
+  border-color: $border-color;
+  color: $text-primary;
+}
+
+.button--danger {
+  background: $color-error;
+  color: $color-white;
+}
+
+.button--full-width {
+  width: 100%;
+}

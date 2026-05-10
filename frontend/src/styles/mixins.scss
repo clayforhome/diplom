@@ -1,0 +1,6 @@
+@mixin surface {
+  border: 1px solid $border-color;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: $shadow-soft;
+}
