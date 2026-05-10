@@ -122,6 +122,12 @@ export interface Participant {
   comment: string | null;
 }
 
+export interface OrganizerUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export interface ConflictInfo {
   userId: string;
   userName: string | null;

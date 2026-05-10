@@ -60,9 +60,9 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
           {isEditing ? (
             <Select label="Статус" value={(values as MeetingFormValues & { status?: MeetingStatus }).status ?? 'Draft'} onChange={() => undefined} options={statusOptions} />
           ) : null}
-          <Input label="Location" value={values.location} onChange={(event) => updateField('location', event.target.value)} />
-          <Input label="Meeting link" value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} />
-          <Input label="Contact info" value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
+          <Input label="Локация" value={values.location} onChange={(event) => updateField('location', event.target.value)} />
+          <Input label="Ссылка" value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} />
+          <Input label="Контактная информация" value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
           <Input
             label="ID участников"
             value={values.participantIds.join(', ')}
