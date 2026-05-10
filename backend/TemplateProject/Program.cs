@@ -262,6 +262,7 @@ async Task<User> EnsureUserAsync(UserManager<User> userManager, string email, st
         UserName = fullName,
         Email = email,
         EmailConfirmed = true,
+        Name = fullName,
         RegistrationDate = TimeProvider.System.GetUtcNow().Date,
         Age = 25
     };

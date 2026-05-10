@@ -46,6 +46,7 @@ public class ListUsersQuery : IFeatureEndpoint
     public class UserDto
     {
         public Guid Id { get; set; }
+        public required string Name { get; set; }
         public string? UserName { get; set; }
         public string? Email { get; set; }
         public int? Age { get; set; }
@@ -79,6 +80,7 @@ public class ListUsersQuery : IFeatureEndpoint
                     UserName = u.UserName,
                     Email = u.Email,
                     Age = u.Age,
+                    Name = u.Name,
                     EmailConfirmed = u.EmailConfirmed,
                     RegistrationDate = u.RegistrationDate
                 })

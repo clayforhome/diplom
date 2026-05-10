@@ -37,6 +37,7 @@ public class GetUserQuery : IFeatureEndpoint
         public Guid Id { get; set; }
         public string? UserName { get; set; }
         public string? Email { get; set; }
+        public string? Name { get; set; }
         public int? Age { get; set; }
         public bool EmailConfirmed { get; set; }
         public DateTime? RegistrationDate { get; set; }
@@ -82,6 +83,7 @@ public class GetUserQuery : IFeatureEndpoint
                 Id = user.Id,
                 UserName = user.UserName,
                 Email = user.Email,
+                Name = user.Name,
                 Age = user.Age,
                 EmailConfirmed = user.EmailConfirmed,
                 RegistrationDate = user.RegistrationDate,
