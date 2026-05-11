@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TemplateProject.Common;
 using TemplateProject.DataAccess;
+using TemplateProject.Domain;
 using TemplateProject.Services;
 
 namespace TemplateProject.Features.Meetings;
@@ -48,6 +49,7 @@ public class DeleteMeetingCommand : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var userId = _currentUserProvider.GetCurrentUserId();
+            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
 
             var meeting = await _context.Meetings
                 .FirstOrDefaultAsync(m => m.Id == request.Id && !m.IsDeleted, cancellationToken);
@@ -57,7 +59,7 @@ public class DeleteMeetingCommand : IFeatureEndpoint
                 return ApiErrors.NotFound.Instance;
             }
 
-            if (meeting.OrganizerId != userId)
+            if (!isAdmin && meeting.OrganizerId != userId)
             {
                 return ApiErrors.Forbidden.Instance;
             }

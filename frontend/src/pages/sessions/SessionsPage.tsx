@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { MeetingCard } from '../../components/meetings/MeetingCard/MeetingCard';
 import { MeetingForm } from '../../components/meetings/MeetingForm/MeetingForm';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
+import { Input } from '../../components/ui/Input/Input';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Select } from '../../components/ui/Select/Select';
 import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
@@ -31,6 +32,7 @@ export function SessionsPage() {
   const { meetings, availability } = useAppSelector((state) => state.sessions);
   const { roles } = useAppSelector((state) => state.auth);
   const selectOptions = useUiSelectOptions();
+  const [search, setSearch] = useState('');
   const [status, setStatus] = useState<MeetingStatus | 'All'>('All');
   const [format, setFormat] = useState<MeetingFormat | 'All'>('All');
 
@@ -45,12 +47,24 @@ export function SessionsPage() {
   }, [dispatch, status]);
 
   const filteredMeetings = useMemo(() => {
-    if (format === 'All') {
-      return meetings;
-    }
+    const normalizedQuery = search.trim().toLowerCase();
 
-    return meetings.filter((meeting) => meeting.format === format);
-  }, [format, meetings]);
+    return meetings.filter((meeting) => {
+      const matchesFormat = format === 'All' || meeting.format === format;
+
+      if (!matchesFormat) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return [meeting.title, meeting.description, meeting.status, meeting.format]
+        .map((value) => String(value ?? '').trim().toLowerCase())
+        .some((value) => value.includes(normalizedQuery));
+    });
+  }, [format, meetings, search]);
 
   return (
     <PageSection title="Встречи" subtitle="Список ваших встреч и операций с ними">
@@ -86,6 +100,7 @@ export function SessionsPage() {
           }}
         />
       ) : null}
+
       {availability ? (
         <div className="availability-box">
           <strong>{availability.allAvailable ? 'Все участники свободны' : 'Найдены конфликты'}</strong>
@@ -98,33 +113,40 @@ export function SessionsPage() {
             : null}
         </div>
       ) : null}
+
       <div className="sessions-page__meetings-header">
         <h2 className="sessions-page__meetings-title">Все встречи</h2>
-        <div className="sessions-page__filters">
-          <div className="sessions-page__filter">
-            <Select
-              label="Фильтр по статусу"
-              value={status}
-              onChange={(value) => setStatus(value as MeetingStatus | 'All')}
-              options={[
-                { value: 'All', label: 'Все статусы' },
-                ...(selectOptions?.meetingStatuses ?? [])
-              ]}
-            />
+        <div className="sessions-page__controls">
+          <div className="sessions-page__search">
+            <Input label="Поиск по встречам" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название, описание, статус, формат..." />
           </div>
-          <div className="sessions-page__filter">
-            <Select
-              label="Фильтр по формату"
-              value={format}
-              onChange={(value) => setFormat(value as MeetingFormat | 'All')}
-              options={[
-                { value: 'All', label: 'Все форматы' },
-                ...(selectOptions?.meetingFormats ?? [])
-              ]}
-            />
+          <div className="sessions-page__filters">
+            <div className="sessions-page__filter">
+              <Select
+                label="Фильтр по статусу"
+                value={status}
+                onChange={(value) => setStatus(value as MeetingStatus | 'All')}
+                options={[
+                  { value: 'All', label: 'Все статусы' },
+                  ...(selectOptions?.meetingStatuses ?? [])
+                ]}
+              />
+            </div>
+            <div className="sessions-page__filter">
+              <Select
+                label="Фильтр по формату"
+                value={format}
+                onChange={(value) => setFormat(value as MeetingFormat | 'All')}
+                options={[
+                  { value: 'All', label: 'Все форматы' },
+                  ...(selectOptions?.meetingFormats ?? [])
+                ]}
+              />
+            </div>
           </div>
         </div>
       </div>
+
       {filteredMeetings.length > 0 ? (
         <div className="meeting-grid">
           {filteredMeetings.map((meeting) => (
@@ -132,7 +154,7 @@ export function SessionsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState title="Встречи не найдены" description="Попробуйте изменить фильтры или создайте новую встречу." />
+        <EmptyState title="Встречи не найдены" description="Попробуйте изменить строку поиска, фильтры или создайте новую встречу." />
       )}
     </PageSection>
   );

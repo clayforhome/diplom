@@ -72,11 +72,16 @@ public class ListMeetingsQuery : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var userId = _currentUserProvider.GetCurrentUserId();
+            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
 
             var query = _context.Meetings
-                .Where(m => !m.IsDeleted)
-                .Where(m => m.OrganizerId == userId || 
-                            _context.MeetingParticipants.Any(mp => mp.MeetingId == m.Id && mp.UserId == userId));
+                .Where(m => !m.IsDeleted);
+
+            if (!isAdmin)
+            {
+                query = query.Where(m => m.OrganizerId == userId ||
+                                         _context.MeetingParticipants.Any(mp => mp.MeetingId == m.Id && mp.UserId == userId));
+            }
 
             if (request.Status.HasValue)
             {

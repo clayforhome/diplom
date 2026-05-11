@@ -112,16 +112,30 @@ h3 {
   background: rgba(255, 255, 255, 0.86);
 }
 
+.sessions-page__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-left: auto;
+  min-width: min(100%, 44rem);
+}
+
+.sessions-page__search {
+  width: min(100%, 24rem);
+}
+
 .sessions-page__filter {
+  flex: 0 0 13.75rem;
   min-width: 13.75rem;
 }
 
 .sessions-page__filters {
   display: flex;
+  align-items: flex-end;
   justify-content: flex-end;
   gap: 1rem;
-  margin-left: auto;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .sessions-page__meetings-header {
@@ -231,10 +245,20 @@ h3 {
     flex-direction: column;
   }
 
+  .sessions-page__controls {
+    align-items: stretch;
+    margin-left: 0;
+    min-width: 0;
+  }
+
+  .sessions-page__search {
+    width: 100%;
+  }
+
   .sessions-page__filters {
     width: 100%;
     justify-content: stretch;
-    margin-left: 0;
+    flex-wrap: wrap;
   }
 
   .sessions-page__filter {

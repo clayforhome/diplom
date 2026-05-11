@@ -13,7 +13,7 @@ import type { AdminUser } from '../../types';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getProfileInitials } from '../../utils/profile';
 
-type SortKey = 'name' | 'userName' | 'email' | 'age' | 'registrationDate' | 'emailConfirmed' | 'id';
+type SortKey = 'name' | 'userName' | 'email' | 'age' | 'registrationDate' | 'id';
 type SortDirection = 'asc' | 'desc';
 
 const fallbackSortOptions = [
@@ -22,7 +22,6 @@ const fallbackSortOptions = [
   { value: 'email', label: 'Эл. почта' },
   { value: 'age', label: 'Возраст' },
   { value: 'registrationDate', label: 'Дата регистрации' },
-  { value: 'emailConfirmed', label: 'Подтверждение email' },
   { value: 'id', label: 'ID' }
 ];
 
@@ -58,6 +57,11 @@ export function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
+  const sortOptions = useMemo(
+    () => (selectOptions?.adminUserSortKeys ?? fallbackSortOptions).filter((option) => option.value !== 'emailConfirmed'),
+    [selectOptions]
+  );
+
   useEffect(() => {
     document.title = 'Управление пользователями - Система управления встречами';
   }, []);
@@ -84,11 +88,11 @@ export function AdminUsersPage() {
     const searchedUsers = query
       ? users.filter((user) =>
           [
+            getDisplayName(user.name, user.userName, user.email),
             user.name,
             user.userName,
             user.email,
             user.age,
-            user.emailConfirmed ? 'confirmed true да yes' : 'not-confirmed false нет no',
             user.registrationDate ? formatDate(user.registrationDate) : null,
             user.id
           ]
@@ -108,10 +112,6 @@ export function AdminUsersPage() {
         const leftDate = left.registrationDate ? new Date(left.registrationDate).getTime() : 0;
         const rightDate = right.registrationDate ? new Date(right.registrationDate).getTime() : 0;
         return (leftDate - rightDate) * direction;
-      }
-
-      if (sortKey === 'emailConfirmed') {
-        return (Number(left.emailConfirmed) - Number(right.emailConfirmed)) * direction;
       }
 
       const leftValue = sortKey === 'name' ? getDisplayName(left.name, left.userName, left.email) : normalizeValue(left[sortKey]);
@@ -195,15 +195,10 @@ export function AdminUsersPage() {
 
       <div className="admin-users-toolbar">
         <div className="admin-users-toolbar__search">
-          <Input label="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Имя, email, ФИО, возраст, дата, подтверждение, id" />
+          <Input label="Поиск" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Имя, email, ФИО, возраст, дата, id" />
         </div>
         <div className="admin-users-toolbar__sort">
-          <Select
-            label="Сортировать по"
-            value={sortKey}
-            onChange={(value) => setSortKey(value as SortKey)}
-            options={selectOptions?.adminUserSortKeys ?? fallbackSortOptions}
-          />
+          <Select label="Сортировать по" value={sortKey} onChange={(value) => setSortKey(value as SortKey)} options={sortOptions} />
           <Select
             label="Направление"
             value={sortDirection}
@@ -255,10 +250,6 @@ export function AdminUsersPage() {
               <div>
                 <span>Регистрация</span>
                 <strong>{user.registrationDate ? formatDate(user.registrationDate) : 'Неизвестно'}</strong>
-              </div>
-              <div>
-                <span>Email подтверждён</span>
-                <strong>{user.emailConfirmed ? 'Да' : 'Нет'}</strong>
               </div>
               <div>
                 <span>ID</span>
