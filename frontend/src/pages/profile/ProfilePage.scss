@@ -1,7 +1,10 @@
+@use '../../styles/variables.scss' as *;
+
 .profile-hero,
 .profile-hero__identity,
 .profile-hero__meta,
 .profile-layout,
+.profile-column,
 .profile-panel,
 .profile-panel__header,
 .profile-facts,
@@ -59,23 +62,24 @@
 }
 
 .profile-hero__identity h2,
-.profile-panel__header h3 {
+.profile-panel__header h3,
+.profile-hero__roles-card strong {
   margin: 0;
 }
 
-.profile-hero__identity p,
-.profile-panel__description {
+.profile-hero__identity p {
   margin: 0.5rem 0 0;
   color: $text-secondary;
 }
 
 .profile-hero__meta {
   gap: 1rem;
+  align-items: stretch;
 }
 
 .profile-hero__meta > div,
-.profile-facts__item {
-  flex: 1 1 0;
+.profile-facts__item,
+.profile-hero__roles-card {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -92,31 +96,72 @@
   font-size: 1.2rem;
 }
 
+.profile-hero__roles-card {
+  min-width: 12rem;
+  justify-content: center;
+
+  strong {
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+}
+
 .profile-layout {
-  flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
 }
 
+.profile-column {
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.profile-column--main {
+  flex: 1 1 0;
+}
+
+.profile-column--side {
+  flex: 0 0 24rem;
+}
+
 .profile-panel {
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 1rem;
   padding: 1.4rem;
   border-radius: 1.5rem;
+  min-width: 0;
+}
+
+.profile-panel--password-card {
+  align-self: stretch;
 }
 
 .profile-panel--accent {
+  margin-top: 1rem;
   background: linear-gradient(135deg, rgba(0, 113, 227, 0.12), rgba(255, 255, 255, 0.84));
 }
 
 .profile-panel__header {
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
+
+  & > span {
+    text-align: right;
+  }
 }
 
 .profile-facts {
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.profile-facts--stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
 }
 
 .profile-facts__item {
@@ -132,9 +177,19 @@
   gap: 0.75rem;
 }
 
+.profile-role-cloud--compact {
+  gap: 0.5rem;
+
+  .badge {
+    white-space: nowrap;
+  }
+}
+
 .profile-password {
   flex-direction: column;
   gap: 1rem;
+  width: min(100%, 28rem);
+  align-self: flex-start;
 }
 
 .profile-action-links {
@@ -159,8 +214,16 @@
 @media (max-width: 900px) {
   .profile-hero,
   .profile-hero__identity,
-  .profile-hero__meta {
+  .profile-hero__meta,
+  .profile-layout {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .profile-column,
+  .profile-column--side,
+  .profile-password {
+    width: 100%;
+    flex: none;
   }
 }

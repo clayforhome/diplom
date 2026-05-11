@@ -13,6 +13,19 @@ export type MeetingStatus =
 
 export type InvitationStatus = 'Pending' | 'Accepted' | 'Declined';
 
+export interface SelectOption<T extends string = string> {
+  value: T;
+  label: string;
+}
+
+export interface UiSelectOptions {
+  meetingFormats: SelectOption<MeetingFormat>[];
+  meetingStatuses: SelectOption<MeetingStatus>[];
+  adminUserSortKeys: SelectOption[];
+  sortDirections: SelectOption[];
+  pageSizes: SelectOption[];
+}
+
 export interface ApiEnvelope<T> {
   data: T;
   status: string;

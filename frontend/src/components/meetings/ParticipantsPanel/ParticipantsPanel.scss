@@ -1,3 +1,5 @@
+@use '../../../styles/variables.scss' as *;
+
 .participants-panel {
   display: flex;
   flex-direction: column;

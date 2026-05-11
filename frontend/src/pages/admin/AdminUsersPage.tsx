@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button/Button';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { usersService } from '../../http/usersService';
 import { authService } from '../../http/authService';
+import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { ApiError } from '../../http/httpClient';
 import { useToast } from '../../hooks/useToast';
 import type { AdminUser } from '../../types';
@@ -15,11 +16,34 @@ import { getDisplayName, getProfileInitials } from '../../utils/profile';
 type SortKey = 'name' | 'userName' | 'email' | 'age' | 'registrationDate' | 'emailConfirmed' | 'id';
 type SortDirection = 'asc' | 'desc';
 
+const fallbackSortOptions = [
+  { value: 'name', label: 'Имя' },
+  { value: 'userName', label: 'ФИО' },
+  { value: 'email', label: 'Эл. почта' },
+  { value: 'age', label: 'Возраст' },
+  { value: 'registrationDate', label: 'Дата регистрации' },
+  { value: 'emailConfirmed', label: 'Подтверждение email' },
+  { value: 'id', label: 'ID' }
+];
+
+const fallbackDirectionOptions = [
+  { value: 'asc', label: 'По возрастанию' },
+  { value: 'desc', label: 'По убыванию' }
+];
+
+const fallbackPageSizeOptions = [
+  { value: '6', label: '6' },
+  { value: '12', label: '12' },
+  { value: '24', label: '24' },
+  { value: '48', label: '48' }
+];
+
 function normalizeValue(value: string | number | boolean | null | undefined): string {
   return String(value ?? '').trim().toLowerCase();
 }
 
 export function AdminUsersPage() {
+  const selectOptions = useUiSelectOptions();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -178,24 +202,13 @@ export function AdminUsersPage() {
             label="Сортировать по"
             value={sortKey}
             onChange={(value) => setSortKey(value as SortKey)}
-            options={[
-              { value: 'name', label: 'Имя' },
-              { value: 'userName', label: 'ФИО' },
-              { value: 'email', label: 'Эл. почта' },
-              { value: 'age', label: 'Возраст' },
-              { value: 'registrationDate', label: 'Дате регистрации' },
-              { value: 'emailConfirmed', label: 'Подтверждению email' },
-              { value: 'id', label: 'ID' }
-            ]}
+            options={selectOptions?.adminUserSortKeys ?? fallbackSortOptions}
           />
           <Select
             label="Направление"
             value={sortDirection}
             onChange={(value) => setSortDirection(value as SortDirection)}
-            options={[
-              { value: 'asc', label: 'По возрастанию' },
-              { value: 'desc', label: 'По убыванию' }
-            ]}
+            options={selectOptions?.sortDirections ?? fallbackDirectionOptions}
           />
           <Select
             label="Пользователей на странице"
@@ -204,12 +217,7 @@ export function AdminUsersPage() {
               setPage(1);
               setPageSize(Number(value));
             }}
-            options={[
-              { value: '6', label: '6' },
-              { value: '12', label: '12' },
-              { value: '24', label: '24' },
-              { value: '48', label: '48' }
-            ]}
+            options={selectOptions?.pageSizes ?? fallbackPageSizeOptions}
           />
         </div>
       </div>

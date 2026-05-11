@@ -1,3 +1,5 @@
+@use '../../../styles/variables.scss' as *;
+
 .meeting-form {
   display: flex;
   flex-direction: column;

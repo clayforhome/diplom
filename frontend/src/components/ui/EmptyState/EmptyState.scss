@@ -1,3 +1,5 @@
+@use '../../../styles/variables.scss' as *;
+
 .empty-state {
   padding: 2rem;
   border: 1px dashed $border-color;

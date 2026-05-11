@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { MeetingForm } from '../../components/meetings/MeetingForm/MeetingForm';
 import { ParticipantsPanel } from '../../components/meetings/ParticipantsPanel/ParticipantsPanel';
 import { Badge } from '../../components/ui/Badge/Badge';
+import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Spinner } from '../../components/ui/Spinner/Spinner';
@@ -76,25 +77,66 @@ export function SessionDetailPage() {
 
   return (
     <PageSection title={meeting.title} subtitle={`${formatDate(meeting.date)} · ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}>
-      <div className="detail-grid">
+      <div className={`detail-grid ${canManage ? '' : 'detail-grid--viewer'}`.trim()}>
         <Card>
           <div className="detail-grid__summary">
-            <div className="detail-grid__badges">
-              <Badge tone="info">{getMeetingFormatLabel(meeting.format)}</Badge>
-              <Badge>{getMeetingStatusLabel(meeting.status)}</Badge>
+            <div className="detail-grid__summary-head">
+              <div className="detail-grid__badges">
+                <Badge tone="info">{getMeetingFormatLabel(meeting.format)}</Badge>
+                <Badge>{getMeetingStatusLabel(meeting.status)}</Badge>
+              </div>
+              <div className="detail-grid__stats">
+                <div className="detail-grid__stat">
+                  <strong>{meeting.participantCount}</strong>
+                  <span>участников</span>
+                </div>
+                <div className="detail-grid__stat">
+                  <strong>{meeting.fileCount}</strong>
+                  <span>файлов</span>
+                </div>
+              </div>
             </div>
-            <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
-            <p>Локация: {meeting.location || 'Не указана'}</p>
-            <p>Ссылка на встречу: {meeting.meetingLink || 'Не указана'}</p>
-            <p>Контактная информация: {meeting.contactInfo || 'Не указана'}</p>
-            <p>Участников: {meeting.participantCount}</p>
-            <p>Файлов: {meeting.fileCount}</p>
+            <div className="detail-grid__description-card">
+              <span className="detail-grid__label">Описание</span>
+              <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
+            </div>
+            <div className="detail-grid__facts">
+              <div className="detail-grid__fact">
+                <span className="detail-grid__label">Локация</span>
+                <strong>{meeting.location || 'Не указана'}</strong>
+              </div>
+              <div className="detail-grid__fact">
+                <span className="detail-grid__label">Ссылка на встречу</span>
+                <strong>{meeting.meetingLink || 'Не указана'}</strong>
+              </div>
+              <div className="detail-grid__fact">
+                <span className="detail-grid__label">Контактная информация</span>
+                <strong>{meeting.contactInfo || 'Не указана'}</strong>
+              </div>
+              <div className="detail-grid__fact">
+                <span className="detail-grid__label">Дата и время</span>
+                <strong>{`${formatDate(meeting.date)} · ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}</strong>
+              </div>
+            </div>
           </div>
         </Card>
         {canManage ? (
           <MeetingForm
             initialValues={formValues}
             isEditing
+            footerActions={
+              <Button
+                type="button"
+                variant="danger"
+                onClick={async () => {
+                  await sessionsService.deleteMeeting(id);
+                  toast('Встреча удалена', 'success');
+                  navigate('/sessions');
+                }}
+              >
+                Удалить встречу
+              </Button>
+            }
             onSubmit={async (values) => {
               await sessionsService.updateMeeting(id, {
                 title: values.title,
@@ -147,20 +189,6 @@ export function SessionDetailPage() {
               : undefined
           }
         />
-        {canManage ? (
-          <Card>
-            <button
-              className="detail-grid__delete-button"
-              onClick={async () => {
-                await sessionsService.deleteMeeting(id);
-                toast('Встреча удалена', 'success');
-                navigate('/sessions');
-              }}
-            >
-              Удалить встречу
-            </button>
-          </Card>
-        ) : null}
       </div>
     </PageSection>
   );

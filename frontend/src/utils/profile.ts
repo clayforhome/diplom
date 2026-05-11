@@ -11,8 +11,12 @@ const avatarPalette = [
 
 type AvatarPaletteItem = (typeof avatarPalette)[number];
 
+function normalizeIdentityPart(value?: string | null): string {
+  return value?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
 function getFioSource(name?: string | null, userName?: string | null, email?: string | null): string {
-  return userName?.trim() || name?.trim() || email?.trim() || 'Пользователь';
+  return normalizeIdentityPart(name) || normalizeIdentityPart(userName) || normalizeIdentityPart(email) || 'Пользователь';
 }
 
 export function getDisplayName(name?: string | null, userName?: string | null, email?: string | null): string {
@@ -55,7 +59,7 @@ function readAvatarTheme(identity: string): AvatarPaletteItem {
 }
 
 export function getProfileAvatarStyle(name?: string | null, userName?: string | null, email?: string | null): CSSProperties {
-  const identity = `${name ?? ''}|${userName ?? ''}|${email ?? ''}` || 'guest';
+  const identity = `${normalizeIdentityPart(name)}|${normalizeIdentityPart(userName)}|${normalizeIdentityPart(email)}` || 'guest';
   const theme = readAvatarTheme(identity);
 
   return {

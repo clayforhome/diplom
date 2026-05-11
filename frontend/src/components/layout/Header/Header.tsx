@@ -5,8 +5,6 @@ import { logout } from '../../../store/slices/authSlice';
 import { useAuth } from '../../../hooks/useAuth';
 import { authService } from '../../../http/authService';
 import { getDisplayName, getProfileAvatarStyle, getProfileInitials } from '../../../utils/profile';
-import { getUserRoleLabel } from '../../../utils/userLabels';
-import type { UserRole } from '../../../types';
 import './Header.scss';
 
 export function Header() {
@@ -15,14 +13,14 @@ export function Header() {
   const { user, roles } = useAuth();
 
   const userTitle = getDisplayName(user?.name, user?.userName, user?.email);
-  const userSubtitle = user?.email ?? (roles.map((role) => getUserRoleLabel(role as UserRole)).join(', ') || 'Пользователь');
+  const userSubtitle = user?.email ?? 'Эл. почта не указана';
   const avatarStyle = getProfileAvatarStyle(user?.name, user?.userName, user?.email);
 
   const handleLogout = async () => {
     try {
       await authService.logout();
     } catch {
-      // Backend logout is stateless for JWT, so local cleanup is still enough.
+
     } finally {
       dispatch(logout());
       navigate('/auth/login');

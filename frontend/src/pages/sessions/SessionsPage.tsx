@@ -4,12 +4,12 @@ import { MeetingForm } from '../../components/meetings/MeetingForm/MeetingForm';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Select } from '../../components/ui/Select/Select';
+import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { checkAvailabilityThunk, clearAvailability, fetchMeetingsThunk } from '../../store/slices/sessionsSlice';
 import { sessionsService } from '../../http/sessionsService';
 import { useToast } from '../../hooks/useToast';
 import { toDateTimeString } from '../../utils/format';
-import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../utils/meetingLabels';
 import type { MeetingFormValues, MeetingFormat, MeetingStatus } from '../../types';
 
 const initialFormValues: MeetingFormValues = {
@@ -30,21 +30,14 @@ export function SessionsPage() {
   const toast = useToast();
   const { meetings, availability } = useAppSelector((state) => state.sessions);
   const { roles } = useAppSelector((state) => state.auth);
+  const selectOptions = useUiSelectOptions();
   const [status, setStatus] = useState<MeetingStatus | 'All'>('All');
   const [format, setFormat] = useState<MeetingFormat | 'All'>('All');
-  const [statusOptions, setStatusOptions] = useState<MeetingStatus[]>([]);
-  const [formatOptions, setFormatOptions] = useState<MeetingFormat[]>([]);
 
   const canManageMeetings = useMemo(() => roles.includes('Organizer') || roles.includes('Admin'), [roles]);
 
   useEffect(() => {
     document.title = 'Расписание встреч - Система управления встречами';
-  }, []);
-
-  useEffect(() => {
-    void sessionsService.getMeetingStatuses().then(setStatusOptions);
-    void sessionsService.getMeetingFormats().then(setFormatOptions);
-
   }, []);
 
   useEffect(() => {
@@ -107,33 +100,29 @@ export function SessionsPage() {
       ) : null}
       <div className="sessions-page__meetings-header">
         <h2 className="sessions-page__meetings-title">Все встречи</h2>
-        <div className="sessions-page__filter">
-          <Select
-            label="Фильтр по статусу"
-            value={status}
-            onChange={(value) => setStatus(value as MeetingStatus | 'All')}
-            options={[
-              { value: 'All', label: 'Все статусы' },
-              ...statusOptions.map((meetingStatus) => ({
-                value: meetingStatus,
-                label: getMeetingStatusLabel(meetingStatus)
-              }))
-            ]}
-          />
-        </div>
-        <div className="sessions-page__filter">
-          <Select
-            label="Фильтр по формату"
-            value={format}
-            onChange={(value) => setFormat(value as MeetingFormat | 'All')}
-            options={[
-              { value: 'All', label: 'Все форматы' },
-              ...formatOptions.map((meetingFormat) => ({
-                value: meetingFormat,
-                label: getMeetingFormatLabel(meetingFormat)
-              }))
-            ]}
-          />
+        <div className="sessions-page__filters">
+          <div className="sessions-page__filter">
+            <Select
+              label="Фильтр по статусу"
+              value={status}
+              onChange={(value) => setStatus(value as MeetingStatus | 'All')}
+              options={[
+                { value: 'All', label: 'Все статусы' },
+                ...(selectOptions?.meetingStatuses ?? [])
+              ]}
+            />
+          </div>
+          <div className="sessions-page__filter">
+            <Select
+              label="Фильтр по формату"
+              value={format}
+              onChange={(value) => setFormat(value as MeetingFormat | 'All')}
+              options={[
+                { value: 'All', label: 'Все форматы' },
+                ...(selectOptions?.meetingFormats ?? [])
+              ]}
+            />
+          </div>
         </div>
       </div>
       {filteredMeetings.length > 0 ? (

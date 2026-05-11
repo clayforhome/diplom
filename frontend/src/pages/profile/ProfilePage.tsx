@@ -74,77 +74,74 @@ export function ProfilePage() {
             <strong>{user?.registrationDate ? formatDate(user.registrationDate) : '-'}</strong>
             <span>дата регистрации</span>
           </div>
+          <div className="profile-hero__roles-card">
+            <strong>Роли и доступ</strong>
+            <div className="profile-role-cloud profile-role-cloud--compact">
+              {(user?.roles ?? []).map((role) => (
+                <Badge key={role} tone="info">
+                  {getUserRoleLabel(role)}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="profile-layout">
-        <section className="profile-panel">
-          <div className="profile-panel__header">
-            <h3>Основная информация</h3>
-            <span>Данные аккаунта</span>
-          </div>
-          <div className="profile-facts">
-            <div className="profile-facts__item">
-              <span>ФИО</span>
-              <strong>{user?.userName ?? 'Не указано'}</strong>
+        <div className="profile-column profile-column--main">
+          <section className="profile-panel">
+            <div className="profile-panel__header">
+              <h3>Основная информация</h3>
+              <span>Данные аккаунта</span>
             </div>
-            <div className="profile-facts__item">
-              <span>Эл. почта</span>
-              <strong>{user?.email ?? 'Не указана'}</strong>
+            <div className="profile-facts profile-facts--stacked">
+              <div className="profile-facts__item">
+                <span>ФИО</span>
+                <strong>{user?.name ?? user?.userName ?? 'Не указано'}</strong>
+              </div>
+              <div className="profile-facts__item">
+                <span>Эл. почта</span>
+                <strong>{user?.email ?? 'Не указана'}</strong>
+              </div>
+              <div className="profile-facts__item">
+                <span>Возраст</span>
+                <strong>{user?.age ?? 'Не указан'}</strong>
+              </div>
+              <div className="profile-facts__item">
+                <span>Регистрация</span>
+                <strong>{user?.registrationDate ? formatDate(user.registrationDate) : 'Неизвестно'}</strong>
+              </div>
             </div>
-            <div className="profile-facts__item">
-              <span>Возраст</span>
-              <strong>{user?.age ?? 'Не указан'}</strong>
-            </div>
-            <div className="profile-facts__item">
-              <span>Регистрация</span>
-              <strong>{user?.registrationDate ? formatDate(user.registrationDate) : 'Неизвестно'}</strong>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <section className="profile-panel">
-          <div className="profile-panel__header">
-            <h3>Роли и доступ</h3>
-            <span>Текущий уровень доступа</span>
-          </div>
-          <div className="profile-role-cloud">
-            {(user?.roles ?? []).map((role) => (
-              <Badge key={role} tone="info">
-                {getUserRoleLabel(role)}
-              </Badge>
-            ))}
-          </div>
-          <p className="profile-panel__description">
-            Здесь видно, какие сценарии доступны текущему аккаунту: личные встречи, организация расписания и административные функции.
-          </p>
-        </section>
-
-        <section className="profile-panel">
-          <div className="profile-panel__header">
-            <h3>Смена пароля</h3>
-          </div>
-          <div className="profile-password">
-            <Input label="Текущий пароль" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />
-            <Input label="Новый пароль" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-            <Input label="Подтверждение нового пароля" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
-            <Button onClick={() => void handleChangePassword()} disabled={isChangingPassword}>
-              Сменить пароль
-            </Button>
-          </div>
-        </section>
-
-        <section className="profile-panel profile-panel--accent">
-          <div className="profile-panel__header">
-            <h3>Следующий шаг</h3>
-            <span>Быстрый переход</span>
-          </div>
-          <div className="profile-action-links">
-            <Link to="/sessions">Перейти к встречам</Link>
-            <Link to="/">Вернуться на главную панель</Link>
-          </div>
-        </section>
+        <div className="profile-column profile-column--side">
+          <section className="profile-panel profile-panel--password-card">
+            <div className="profile-panel__header">
+              <h3>Смена пароля</h3>
+            </div>
+            <div className="profile-password">
+              <Input label="Текущий пароль" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />
+              <Input label="Новый пароль" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+              <Input label="Подтверждение нового пароля" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+              <Button onClick={() => void handleChangePassword()} disabled={isChangingPassword}>
+                Сменить пароль
+              </Button>
+            </div>
+          </section>
+        </div>
       </div>
+
+      <section className="profile-panel profile-panel--accent">
+        <div className="profile-panel__header">
+          <h3>Следующий шаг</h3>
+          <span>Быстрый переход</span>
+        </div>
+        <div className="profile-action-links">
+          <Link to="/sessions">Перейти к встречам</Link>
+          <Link to="/">Вернуться на главную панель</Link>
+        </div>
+      </section>
     </PageSection>
   );
 }

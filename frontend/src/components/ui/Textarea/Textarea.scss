@@ -1,3 +1,5 @@
+@use '../../../styles/variables.scss' as *;
+
 .textarea-field {
   display: flex;
   flex-direction: column;

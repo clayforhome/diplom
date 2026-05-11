@@ -8,7 +8,7 @@ export function AdminDashboardPage() {
   }, []);
 
   return (
-    <PageSection title="Панель администратора" subtitle="Точка входа для административных функций, доступных в текущем backend">
+    <PageSection title="Панель администратора">
       <div className="admin-hero">
         <div>
           <span className="admin-hero__eyebrow">Административное рабочее пространство</span>

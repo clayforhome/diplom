@@ -1,3 +1,5 @@
+@use '../../../styles/variables.scss' as *;
+
 .meeting-card {
   display: flex;
   flex-direction: column;

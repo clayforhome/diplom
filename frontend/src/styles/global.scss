@@ -1,26 +1,26 @@
-@import './variables.scss';
-@import './mixins.scss';
+@use './variables.scss' as *;
+@use './mixins.scss';
 
-@import '../components/ui/Button/Button.scss';
-@import '../components/ui/Input/Input.scss';
-@import '../components/ui/Select/Select.scss';
-@import '../components/ui/Textarea/Textarea.scss';
-@import '../components/ui/Badge/Badge.scss';
-@import '../components/ui/Card/Card.scss';
-@import '../components/ui/EmptyState/EmptyState.scss';
-@import '../components/ui/Spinner/Spinner.scss';
-@import '../components/ui/ToastViewport/ToastViewport.scss';
-@import '../components/layout/Header/Header.scss';
-@import '../components/layout/AppShell/AppShell.scss';
-@import '../components/layout/PageSection/PageSection.scss';
-@import '../components/meetings/MeetingCard/MeetingCard.scss';
-@import '../components/meetings/MeetingForm/MeetingForm.scss';
-@import '../components/meetings/ParticipantsPanel/ParticipantsPanel.scss';
-@import '../pages/auth/AuthPage.scss';
-@import '../pages/dashboard/DashboardPage.scss';
-@import '../pages/profile/ProfilePage.scss';
-@import '../pages/admin/AdminDashboardPage.scss';
-@import '../pages/admin/AdminUsersPage.scss';
+@use '../components/ui/Button/Button.scss';
+@use '../components/ui/Input/Input.scss';
+@use '../components/ui/Select/Select.scss';
+@use '../components/ui/Textarea/Textarea.scss';
+@use '../components/ui/Badge/Badge.scss';
+@use '../components/ui/Card/Card.scss';
+@use '../components/ui/EmptyState/EmptyState.scss';
+@use '../components/ui/Spinner/Spinner.scss';
+@use '../components/ui/ToastViewport/ToastViewport.scss';
+@use '../components/layout/Header/Header.scss';
+@use '../components/layout/AppShell/AppShell.scss';
+@use '../components/layout/PageSection/PageSection.scss';
+@use '../components/meetings/MeetingCard/MeetingCard.scss';
+@use '../components/meetings/MeetingForm/MeetingForm.scss';
+@use '../components/meetings/ParticipantsPanel/ParticipantsPanel.scss';
+@use '../pages/auth/AuthPage.scss';
+@use '../pages/dashboard/DashboardPage.scss';
+@use '../pages/profile/ProfilePage.scss';
+@use '../pages/admin/AdminDashboardPage.scss';
+@use '../pages/admin/AdminUsersPage.scss';
 
 :root {
   font-family: $font-family-base;
@@ -87,6 +87,14 @@ h3 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.detail-grid--viewer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.detail-grid > .card:last-child {
+  grid-column: 1 / -1;
+}
+
 .dashboard-grid__badges,
 .detail-grid__badges,
 .availability-box,
@@ -106,6 +114,14 @@ h3 {
 
 .sessions-page__filter {
   min-width: 13.75rem;
+}
+
+.sessions-page__filters {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-left: auto;
+  flex-wrap: wrap;
 }
 
 .sessions-page__meetings-header {
@@ -129,13 +145,100 @@ h3 {
   cursor: pointer;
 }
 
+.detail-grid__summary {
+  gap: 1.25rem;
+}
+
+.detail-grid__summary-head,
+.detail-grid__stats,
+.detail-grid__facts {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-grid__summary-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.detail-grid__stats {
+  grid-template-columns: repeat(2, minmax(6.5rem, 1fr));
+}
+
+.detail-grid__stat,
+.detail-grid__fact,
+.detail-grid__description-card {
+  padding: 1rem 1.1rem;
+  border-radius: 1.1rem;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.detail-grid__stat,
+.detail-grid__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.detail-grid__stat strong,
+.detail-grid__fact strong {
+  font-size: 1rem;
+}
+
+.detail-grid__fact strong {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.detail-grid__description-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-grid__description-card p {
+  margin: 0;
+}
+
+.detail-grid__label,
+.detail-grid__stat span {
+  color: $text-secondary;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.detail-grid__facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 900px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }
 
+  .detail-grid__summary-head,
+  .detail-grid__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .sessions-page__meetings-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .sessions-page__filters {
+    width: 100%;
+    justify-content: stretch;
+    margin-left: 0;
+  }
+
+  .sessions-page__filter {
+    min-width: 0;
+    flex: 1 1 0;
   }
 }

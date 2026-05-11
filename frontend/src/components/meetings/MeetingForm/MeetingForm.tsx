@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '../../ui/Button/Button';
 import { Input } from '../../ui/Input/Input';
 import { Select } from '../../ui/Select/Select';
 import { Textarea } from '../../ui/Textarea/Textarea';
 import { Card } from '../../ui/Card/Card';
 import { sessionsService } from '../../../http/sessionsService';
-import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser } from '../../../types';
-import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../../utils/meetingLabels';
+import { useUiSelectOptions } from '../../../hooks/useUiSelectOptions';
+import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser, SelectOption } from '../../../types';
 import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './MeetingForm.scss';
 
@@ -15,64 +16,50 @@ interface MeetingFormProps {
   onSubmit: (values: MeetingFormValues) => Promise<void>;
   onCheckAvailability?: (values: MeetingFormValues) => Promise<void>;
   isEditing?: boolean;
+  footerActions?: ReactNode;
 }
 
-export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEditing = false }: MeetingFormProps) {
+export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEditing = false, footerActions }: MeetingFormProps) {
   const [values, setValues] = useState(initialValues);
-  const [meetingFormats, setMeetingFormats] = useState<MeetingFormat[]>([]);
-  const [meetingStatuses, setMeetingStatuses] = useState<MeetingStatus[]>([]);
   const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
+  const selectOptions = useUiSelectOptions();
 
   useEffect(() => {
     setValues(initialValues);
   }, [initialValues]);
 
   useEffect(() => {
-    let isMounted = true;
+    const formats = selectOptions?.meetingFormats.map((option) => option.value as MeetingFormat) ?? [];
 
-    void sessionsService.getMeetingFormats().then((formats) => {
-      if (!isMounted) {
-        return;
+    if (formats.length === 0) {
+      return;
+    }
+
+    setValues((current) => {
+      if (formats.includes(current.format)) {
+        return current;
       }
 
-      setMeetingFormats(formats);
-      setValues((current) => {
-        if (formats.length === 0 || formats.includes(current.format)) {
-          return current;
-        }
-
-        return { ...current, format: formats[0] };
-      });
+      return { ...current, format: formats[0] };
     });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  }, [selectOptions]);
 
   useEffect(() => {
     if (!isEditing) {
       return;
     }
 
-    let isMounted = true;
+    const statuses = selectOptions?.meetingStatuses.map((option) => option.value as MeetingStatus) ?? [];
 
-    void sessionsService.getMeetingStatuses().then((statuses) => {
-      if (!isMounted) {
-        return;
-      }
+    if (statuses.length === 0) {
+      return;
+    }
 
-      setMeetingStatuses(statuses);
-      setValues((current) => ({
-        ...current,
-        status: current.status && statuses.includes(current.status) ? current.status : statuses[0] ?? current.status
-      }));
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isEditing]);
+    setValues((current) => ({
+      ...current,
+      status: current.status && statuses.includes(current.status) ? current.status : statuses[0] ?? current.status
+    }));
+  }, [isEditing, selectOptions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -93,21 +80,13 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
   };
 
   const formatOptions = useMemo(
-    () =>
-      (meetingFormats.length > 0 ? meetingFormats : [values.format]).map((format) => ({
-        value: format,
-        label: getMeetingFormatLabel(format)
-      })),
-    [meetingFormats, values.format]
+    () => (selectOptions?.meetingFormats.length ? selectOptions.meetingFormats : [{ value: values.format, label: values.format }]),
+    [selectOptions, values.format]
   );
 
   const statusOptions = useMemo(
-    () =>
-      meetingStatuses.map((status) => ({
-        value: status,
-        label: getMeetingStatusLabel(status)
-      })),
-    [meetingStatuses]
+    () => (selectOptions?.meetingStatuses ?? []).map((option) => option as SelectOption<MeetingStatus>),
+    [selectOptions]
   );
 
   return (
@@ -149,6 +128,7 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
               Проверить занятость
             </Button>
           ) : null}
+          {footerActions}
           <Button type="submit">{isEditing ? 'Сохранить изменения' : 'Создать встречу'}</Button>
         </div>
       </form>
