@@ -124,6 +124,16 @@ export interface MeetingDetail extends MeetingSummary {
   fileCount: number;
 }
 
+export interface MeetingFileItem {
+  id: string;
+  meetingId?: string;
+  fileName: string;
+  fileType: string;
+  uploadedAt: string;
+  uploadedById?: string;
+  uploaderName?: string | null;
+}
+
 export interface Participant {
   userId: string;
   userName: string | null;

@@ -4,6 +4,7 @@ import type {
   CreateMeetingRequest,
   InviteParticipantsRequest,
   MeetingDetail,
+  MeetingFileItem,
   MeetingFormat,
   MeetingStatus,
   MeetingSummary,
@@ -56,6 +57,18 @@ export const sessionsService = {
   },
   getParticipants(id: string): Promise<Participant[]> {
     return httpClient.get<Participant[]>(`/meetings/${id}/participants`);
+  },
+  listMeetingFiles(id: string): Promise<MeetingFileItem[]> {
+    return httpClient.get<MeetingFileItem[]>(`/meetings/${id}/files`);
+  },
+  uploadMeetingFile(id: string, file: File): Promise<MeetingFileItem> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return httpClient.postForm<MeetingFileItem>(`/meetings/${id}/files`, formData);
+  },
+  deleteMeetingFile(id: string, fileId: string): Promise<unknown> {
+    return httpClient.delete(`/meetings/${id}/files/${fileId}`);
   },
   inviteParticipants(id: string, payload: InviteParticipantsRequest): Promise<unknown> {
     return httpClient.post(`/meetings/${id}/participants`, payload);
