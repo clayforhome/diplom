@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TemplateProject.Common;
 using TemplateProject.DataAccess;
+using TemplateProject.Domain;
 using TemplateProject.Services;
 
 namespace TemplateProject.Features.Meetings;
@@ -21,7 +22,7 @@ public class DeleteMeetingFileCommand : IFeatureEndpoint
             .WithName("DeleteMeetingFile")
             .WithTags("Meeting Files")
             .WithOpenApi()
-            .RequireAuthorization();
+            .RequireAuthorization(AuthorizationPolicy.ManagementPolicy);
     }
 
     public record Request(Guid MeetingId, Guid FileId) : IRequest<BaseApiResponse<MediatR.Unit>>;
@@ -42,6 +43,7 @@ public class DeleteMeetingFileCommand : IFeatureEndpoint
         public async Task<BaseApiResponse<MediatR.Unit>> Handle(Request request, CancellationToken cancellationToken)
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
             if (currentUserId == null || currentUserId == Guid.Empty)
             {
                 return ApiErrors.Unauthorized.Instance;
@@ -56,7 +58,7 @@ public class DeleteMeetingFileCommand : IFeatureEndpoint
                 return ApiErrors.NotFound.Instance;
             }
 
-            if (meeting.OrganizerId != currentUserId.Value)
+            if (!isAdmin && meeting.OrganizerId != currentUserId.Value)
             {
                 return ApiErrors.Forbidden.Instance;
             }

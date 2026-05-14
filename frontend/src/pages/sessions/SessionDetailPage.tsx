@@ -1,19 +1,36 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MeetingForm } from '../../components/meetings/MeetingForm/MeetingForm';
 import { ParticipantsPanel } from '../../components/meetings/ParticipantsPanel/ParticipantsPanel';
 import { Badge } from '../../components/ui/Badge/Badge';
 import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
+import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Spinner } from '../../components/ui/Spinner/Spinner';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchMeetingThunk, fetchParticipantsThunk } from '../../store/slices/sessionsSlice';
+import { ApiError } from '../../http/httpClient';
 import { sessionsService } from '../../http/sessionsService';
 import { useToast } from '../../hooks/useToast';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchMeetingThunk, fetchParticipantsThunk } from '../../store/slices/sessionsSlice';
+import type { MeetingFileItem, MeetingFormValues, MeetingStatus } from '../../types';
 import { formatDate, formatDateTimeRange, toDateTimeString } from '../../utils/format';
 import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../utils/meetingLabels';
-import type { MeetingFormValues, MeetingStatus } from '../../types';
+
+function getDisplayFileName(fileName: string): string {
+  const trimmed = fileName.trim();
+  const underscoreIndex = trimmed.indexOf('_');
+
+  if (underscoreIndex > 0) {
+    const prefix = trimmed.slice(0, underscoreIndex);
+
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(prefix)) {
+      return trimmed.slice(underscoreIndex + 1);
+    }
+  }
+
+  return trimmed;
+}
 
 function getFormValues(meeting?: {
   title?: string;
@@ -46,17 +63,49 @@ function getFormValues(meeting?: {
   };
 }
 
+function getFileMeta(file: MeetingFileItem): string {
+  const parts = [formatDate(file.uploadedAt)];
+
+  if (file.uploaderName?.trim()) {
+    parts.push(file.uploaderName);
+  }
+
+  if (file.fileType.trim()) {
+    parts.push(file.fileType);
+  }
+
+  return parts.join(' • ');
+}
+
 export function SessionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [meetingFiles, setMeetingFiles] = useState<MeetingFileItem[]>([]);
+  const [isFilesLoading, setIsFilesLoading] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const meeting = useAppSelector((state) => state.sessions.selectedMeeting);
   const participants = useAppSelector((state) => state.sessions.participants);
   const auth = useAppSelector((state) => state.auth);
 
   const formValues = useMemo(() => getFormValues(meeting ?? undefined), [meeting]);
   const canManage = Boolean(meeting && auth.user?.id === meeting.organizerId) || auth.roles.includes('Admin');
+
+  async function loadMeetingFiles(meetingId: string) {
+    setIsFilesLoading(true);
+
+    try {
+      const files = await sessionsService.listMeetingFiles(meetingId);
+      setMeetingFiles(files);
+    } catch {
+      setMeetingFiles([]);
+      toast('Не удалось загрузить файлы встречи', 'error');
+    } finally {
+      setIsFilesLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!id) {
@@ -65,6 +114,7 @@ export function SessionDetailPage() {
 
     void dispatch(fetchMeetingThunk(id));
     void dispatch(fetchParticipantsThunk(id));
+    void loadMeetingFiles(id);
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -76,7 +126,7 @@ export function SessionDetailPage() {
   }
 
   return (
-    <PageSection title={meeting.title} subtitle={`${formatDate(meeting.date)} · ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}>
+    <PageSection title={meeting.title} subtitle={`${formatDate(meeting.date)} • ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}>
       <div className={`detail-grid ${canManage ? '' : 'detail-grid--viewer'}`.trim()}>
         <Card>
           <div className="detail-grid__summary">
@@ -115,9 +165,99 @@ export function SessionDetailPage() {
               </div>
               <div className="detail-grid__fact">
                 <span className="detail-grid__label">Дата и время</span>
-                <strong>{`${formatDate(meeting.date)} · ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}</strong>
+                <strong>{`${formatDate(meeting.date)} • ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}</strong>
               </div>
             </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="meeting-files">
+            <div className="meeting-files__header">
+              <div>
+                <span className="detail-grid__label">Файлы встречи</span>
+                <h3 className="meeting-files__title">Материалы и вложения</h3>
+              </div>
+              {canManage ? (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="meeting-files__input"
+                    accept=".pdf,.docx,.pptx,.xlsx,.jpg,.jpeg,.png"
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+
+                      if (!file) {
+                        return;
+                      }
+
+                      setIsUploadingFile(true);
+
+                      try {
+                        await sessionsService.uploadMeetingFile(id, file);
+                        toast('Файл загружен', 'success');
+                        await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
+                      } catch (error) {
+                        const message = error instanceof ApiError ? error.message : 'Не удалось загрузить файл';
+                        toast(message, 'error');
+                      } finally {
+                        setIsUploadingFile(false);
+                        event.target.value = '';
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="secondary" disabled={isUploadingFile} onClick={() => fileInputRef.current?.click()}>
+                    {isUploadingFile ? 'Загрузка...' : 'Загрузить файл'}
+                  </Button>
+                </>
+              ) : null}
+            </div>
+
+            {isFilesLoading ? <Spinner /> : null}
+
+            {!isFilesLoading && meetingFiles.length === 0 ? (
+              <EmptyState title="Файлы пока не добавлены" description="Когда организатор или администратор загрузит материалы, они появятся здесь." />
+            ) : null}
+
+            {!isFilesLoading && meetingFiles.length > 0 ? (
+              <div className="meeting-files__list">
+                {meetingFiles.map((file) => (
+                    <div key={file.id} className="meeting-files__item">
+                      <div className="meeting-files__item-copy">
+                        <strong title={getDisplayFileName(file.fileName)}>{getDisplayFileName(file.fileName)}</strong>
+                        {/*<span>{getFileMeta(file)}</span>*/}
+                      </div>
+                      <div className="meeting-files__actions">
+                        <a
+                          className="button button--secondary"
+                          href={sessionsService.getMeetingFileDownloadUrl(id, file.id)}
+                          download={getDisplayFileName(file.fileName)}
+                        >
+                          Скачать
+                        </a>
+                        {canManage ? (
+                          <Button
+                            type="button"
+                            variant="danger"
+                            onClick={async () => {
+                              try {
+                                await sessionsService.deleteMeetingFile(id, file.id);
+                                toast('Файл удалён', 'success');
+                                await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
+                              } catch (error) {
+                                const message = error instanceof ApiError ? error.message : 'Не удалось удалить файл';
+                                toast(message, 'error');
+                              }
+                            }}
+                          >
+                            Удалить
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </Card>
         {canManage ? (

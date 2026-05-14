@@ -1,4 +1,5 @@
-import { httpClient } from './httpClient';
+import { httpClient, resolveHttpClientUrl } from './httpClient';
+import { jwtService } from '../utils/jwt';
 import type {
   AvailabilityResult,
   CreateMeetingRequest,
@@ -69,6 +70,16 @@ export const sessionsService = {
   },
   deleteMeetingFile(id: string, fileId: string): Promise<unknown> {
     return httpClient.delete(`/meetings/${id}/files/${fileId}`);
+  },
+  getMeetingFileDownloadUrl(id: string, fileId: string): string {
+    const token = jwtService.getToken();
+    const path = `/meetings/${id}/files/${fileId}/download`;
+
+    if (!token) {
+      return resolveHttpClientUrl(path);
+    }
+
+    return resolveHttpClientUrl(`${path}?access_token=${encodeURIComponent(token)}`);
   },
   inviteParticipants(id: string, payload: InviteParticipantsRequest): Promise<unknown> {
     return httpClient.post(`/meetings/${id}/participants`, payload);

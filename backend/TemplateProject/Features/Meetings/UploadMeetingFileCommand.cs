@@ -49,6 +49,21 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
     {
+        private static readonly HashSet<string> SupportedFileExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".pdf",
+            ".doc",
+            ".docx",
+            ".ppt",
+            ".pptx",
+            ".xls",
+            ".xlsx",
+            ".txt",
+            ".jpg",
+            ".jpeg",
+            ".png"
+        };
+
         private readonly DatabaseContext _context;
         private readonly CurrentUserProvider _currentUserProvider;
 
@@ -61,6 +76,7 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
             if (currentUserId == null || currentUserId == Guid.Empty)
             {
                 return ApiErrors.Unauthorized.Instance;
@@ -76,34 +92,47 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
                 return ApiErrors.NotFound.Instance;
             }
 
+            if (!isAdmin && meeting.OrganizerId != currentUserId.Value)
+            {
+                return ApiErrors.Forbidden.Instance;
+            }
+
             // Validate file
             if (request.File.Length == 0)
             {
-                return ApiErrors.BadRequest.Instance;
+                return new ApiErrors.ValidationError("The uploaded file is empty.");
             }
 
-            // Supported file types
-            var supportedTypes = new[] { ".pdf", ".docx", ".pptx", ".xlsx", ".jpg", ".jpeg", ".png" };
-            var fileExtension = Path.GetExtension(request.File.FileName).ToLower();
-            
-            if (!supportedTypes.Contains(fileExtension))
+            var originalFileName = Path.GetFileName(request.File.FileName);
+            if (string.IsNullOrWhiteSpace(originalFileName))
             {
-                return ApiErrors.BadRequest.Instance;
+                return new ApiErrors.ValidationError("A file name is required.");
+            }
+
+            var fileExtension = Path.GetExtension(originalFileName);
+            if (string.IsNullOrWhiteSpace(fileExtension) || !SupportedFileExtensions.Contains(fileExtension))
+            {
+                return new ApiErrors.ValidationError(
+                    $"Unsupported file type '{fileExtension}'. Allowed types: {string.Join(", ", SupportedFileExtensions.OrderBy(x => x))}.");
             }
 
             // Generate unique file path
-            var fileName = $"{Guid.NewGuid()}_{request.File.FileName}";
+            var fileName = $"{Guid.NewGuid()}_{originalFileName}";
             var filePath = Path.Combine("files", "meetings", request.MeetingId.ToString(), fileName);
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath);
+            var fullDirectory = Path.GetDirectoryName(fullPath);
 
             // Create directory if not exists
-            var directory = Path.GetDirectoryName(filePath);
-            if (!Directory.Exists(directory))
+            if (string.IsNullOrWhiteSpace(fullDirectory))
             {
-                Directory.CreateDirectory(directory!);
+                return new ApiErrors.ValidationError("Could not determine a storage directory for the uploaded file.");
             }
 
-            // Save file
-            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath);
+            if (!Directory.Exists(fullDirectory))
+            {
+                Directory.CreateDirectory(fullDirectory);
+            }
+
             await using (var stream = new FileStream(fullPath, FileMode.Create))
             {
                 await request.File.CopyToAsync(stream, cancellationToken);
@@ -114,7 +143,7 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
             {
                 Id = Guid.NewGuid(),
                 MeetingId = request.MeetingId,
-                FileName = request.File.FileName,
+                FileName = originalFileName,
                 FilePath = filePath,
                 FileType = request.File.ContentType ?? string.Empty,
                 UploadedById = currentUserId.Value,

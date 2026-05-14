@@ -31,6 +31,10 @@ function resolveApiUrl(): string {
 const API_URL = resolveApiUrl();
 const requestActivityHandlers: RequestActivityHandlers = {};
 
+export function resolveHttpClientUrl(path: string): string {
+  return `${API_URL}${path}`;
+}
+
 export function configureHttpClientActivityHandlers(handlers: RequestActivityHandlers) {
   requestActivityHandlers.onRequestStart = handlers.onRequestStart;
   requestActivityHandlers.onRequestEnd = handlers.onRequestEnd;
