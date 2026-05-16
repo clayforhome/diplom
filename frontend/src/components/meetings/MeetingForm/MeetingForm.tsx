@@ -7,6 +7,7 @@ import { Textarea } from '../../ui/Textarea/Textarea';
 import { Card } from '../../ui/Card/Card';
 import { sessionsService } from '../../../http/sessionsService';
 import { useUiSelectOptions } from '../../../hooks/useUiSelectOptions';
+import { useToast } from '../../../hooks/useToast';
 import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser, SelectOption } from '../../../types';
 import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './MeetingForm.scss';
@@ -23,6 +24,12 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
   const [values, setValues] = useState(initialValues);
   const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
   const selectOptions = useUiSelectOptions();
+  const toast = useToast();
+
+  const now = new Date();
+  // We use local timezone formatting instead of toISOString() to avoid UTC shift
+  const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const currentTimeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   useEffect(() => {
     setValues(initialValues);
@@ -95,15 +102,51 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
         className="meeting-form"
         onSubmit={(event) => {
           event.preventDefault();
+          
+          if (values.date < todayString) {
+            toast('Дата встречи не может быть в прошлом', 'error');
+            return;
+          }
+          if (values.date === todayString && values.startTime < currentTimeString) {
+            toast('Время начала не может быть в прошлом', 'error');
+            return;
+          }
+          if (values.endTime <= values.startTime) {
+            toast('Время окончания должно быть позже времени начала', 'error');
+            return;
+          }
+
           void onSubmit(values);
         }}
       >
         <div className="meeting-form__grid">
           <Input label="Название встречи" value={values.title} onChange={(event) => updateField('title', event.target.value)} required />
+
+          <Input 
+            label="Дата" 
+            type="date" 
+            min={todayString}
+            value={values.date} 
+            onChange={(event) => updateField('date', event.target.value)} 
+            required 
+          />
+          <Input 
+            label="Начало" 
+            type="time" 
+            min={values.date === todayString ? currentTimeString : undefined}
+            value={values.startTime} 
+            onChange={(event) => updateField('startTime', event.target.value)} 
+            required 
+          />
+          <Input 
+            label="Окончание" 
+            type="time" 
+            min={values.startTime}
+            value={values.endTime} 
+            onChange={(event) => updateField('endTime', event.target.value)} 
+            required 
+          />
           <Select label="Формат" value={values.format} onChange={(value) => updateField('format', value as MeetingFormat)} options={formatOptions} />
-          <Input label="Дата" type="date" value={values.date} onChange={(event) => updateField('date', event.target.value)} required />
-          <Input label="Начало" type="time" value={values.startTime} onChange={(event) => updateField('startTime', event.target.value)} required />
-          <Input label="Окончание" type="time" value={values.endTime} onChange={(event) => updateField('endTime', event.target.value)} required />
           {isEditing && values.status ? (
             <Select label="Статус" value={values.status} onChange={(value) => updateField('status', value as MeetingStatus)} options={statusOptions} />
           ) : null}

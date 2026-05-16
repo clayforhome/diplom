@@ -3,23 +3,17 @@ import { Badge } from '../../ui/Badge/Badge';
 import { Card } from '../../ui/Card/Card';
 import type { MeetingSummary } from '../../../types';
 import { formatDate, formatDateTimeRange } from '../../../utils/format';
-import { getMeetingFormatLabel, getMeetingStatusLabel } from '../../../utils/meetingLabels';
+import { getMeetingFormatLabel, getMeetingStatusLabel, getMeetingStatusTone } from '../../../utils/meetingLabels';
 import './MeetingCard.scss';
 
-function resolveTone(status: MeetingSummary['status']) {
-  if (status === 'Confirmed' || status === 'Completed') return 'success';
-  if (status === 'Cancelled') return 'danger';
-  if (status === 'Rescheduled' || status === 'AwaitingConfirmation') return 'warning';
-  if (status === 'Scheduled') return 'info';
-  return 'neutral';
-}
+
 
 export function MeetingCard({ meeting }: { meeting: MeetingSummary }) {
   return (
     <Card>
       <article className="meeting-card">
         <div className="meeting-card__meta">
-          <Badge tone={resolveTone(meeting.status)}>{getMeetingStatusLabel(meeting.status)}</Badge>
+          <Badge tone={getMeetingStatusTone(meeting.status)}>{getMeetingStatusLabel(meeting.status)}</Badge>
           <Badge>{getMeetingFormatLabel(meeting.format)}</Badge>
         </div>
         <h3 className="meeting-card__title">{meeting.title}</h3>

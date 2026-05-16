@@ -44,9 +44,24 @@ function getFormValues(meeting?: {
   meetingLink?: string | null;
   contactInfo?: string | null;
 }): MeetingFormValues {
-  const date = meeting?.date ? new Date(meeting.date).toISOString().slice(0, 10) : '';
-  const startTime = meeting?.startTime ? new Date(meeting.startTime).toISOString().slice(11, 16) : '';
-  const endTime = meeting?.endTime ? new Date(meeting.endTime).toISOString().slice(11, 16) : '';
+  function toLocalDateString(iso: string): string {
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function toLocalTimeString(iso: string): string {
+    const d = new Date(iso);
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${min}`;
+  }
+
+  const date = meeting?.date ? toLocalDateString(meeting.date) : '';
+  const startTime = meeting?.startTime ? toLocalTimeString(meeting.startTime) : '';
+  const endTime = meeting?.endTime ? toLocalTimeString(meeting.endTime) : '';
 
   return {
     title: meeting?.title ?? '',
@@ -62,6 +77,7 @@ function getFormValues(meeting?: {
     participantIds: []
   };
 }
+
 
 function getFileMeta(file: MeetingFileItem): string {
   const parts = [formatDate(file.uploadedAt)];
@@ -297,7 +313,7 @@ export function SessionDetailPage() {
         ) : null}
         <ParticipantsPanel
           participants={participants}
-          canRespond
+          canRespond={meeting.status !== 'Confirmed' && meeting.status !== 'Completed' && meeting.status !== 'Cancelled'}
           currentUserId={auth.user?.id}
           onRespond={async (status, comment) => {
             if (!auth.user?.id) {

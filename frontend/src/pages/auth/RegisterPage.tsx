@@ -208,7 +208,7 @@ export function RegisterPage() {
         >
           <div className="auth-page__hero">
             <span className="auth-page__eyebrow">Новый аккаунт</span>
-            <h1 className="auth-page__title">Создайте рабочий профиль</h1>
+            <h1 className="auth-page__title">Создание аккаунта</h1>
           </div>
           <Input label="Имя" value={form.name} error={errors.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
           <Input label="Эл. почта" type="email" value={form.email} error={errors.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />

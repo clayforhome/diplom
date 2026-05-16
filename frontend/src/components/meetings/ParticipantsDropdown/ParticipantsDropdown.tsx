@@ -57,7 +57,7 @@ export function ParticipantsDropdown({ label, users, value, onChange, disabled =
   const summary = selectedUsers.length > 0 ? `Выбрано: ${selectedUsers.length}` : 'Выберите участников';
 
   return (
-    <div ref={rootRef} className="participants-dropdown">
+    <div ref={rootRef} className={`participants-dropdown${isOpen ? ' participants-dropdown--open' : ''}`}>
       <span className="participants-dropdown__label">{label}</span>
       <button
         type="button"
