@@ -5,6 +5,7 @@ import { ParticipantsPanel } from '../../components/meetings/ParticipantsPanel/P
 import { Badge } from '../../components/ui/Badge/Badge';
 import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog/ConfirmDialog';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Spinner } from '../../components/ui/Spinner/Spinner';
@@ -102,6 +103,8 @@ export function SessionDetailPage() {
   const [meetingFiles, setMeetingFiles] = useState<MeetingFileItem[]>([]);
   const [isFilesLoading, setIsFilesLoading] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const meeting = useAppSelector((state) => state.sessions.selectedMeeting);
   const participants = useAppSelector((state) => state.sessions.participants);
   const auth = useAppSelector((state) => state.auth);
@@ -238,39 +241,39 @@ export function SessionDetailPage() {
             {!isFilesLoading && meetingFiles.length > 0 ? (
               <div className="meeting-files__list">
                 {meetingFiles.map((file) => (
-                    <div key={file.id} className="meeting-files__item">
-                      <div className="meeting-files__item-copy">
-                        <strong title={getDisplayFileName(file.fileName)}>{getDisplayFileName(file.fileName)}</strong>
-                        {/*<span>{getFileMeta(file)}</span>*/}
-                      </div>
-                      <div className="meeting-files__actions">
-                        <a
-                          className="button button--secondary"
-                          href={sessionsService.getMeetingFileDownloadUrl(id, file.id)}
-                          download={getDisplayFileName(file.fileName)}
-                        >
-                          Скачать
-                        </a>
-                        {canManage ? (
-                          <Button
-                            type="button"
-                            variant="danger"
-                            onClick={async () => {
-                              try {
-                                await sessionsService.deleteMeetingFile(id, file.id);
-                                toast('Файл удалён', 'success');
-                                await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
-                              } catch (error) {
-                                const message = error instanceof ApiError ? error.message : 'Не удалось удалить файл';
-                                toast(message, 'error');
-                              }
-                            }}
-                          >
-                            Удалить
-                          </Button>
-                        ) : null}
-                      </div>
+                  <div key={file.id} className="meeting-files__item">
+                    <div className="meeting-files__item-copy">
+                      <strong title={getDisplayFileName(file.fileName)}>{getDisplayFileName(file.fileName)}</strong>
+                      {/*<span>{getFileMeta(file)}</span>*/}
                     </div>
+                    <div className="meeting-files__actions">
+                      <a
+                        className="button button--secondary"
+                        href={sessionsService.getMeetingFileDownloadUrl(id, file.id)}
+                        download={getDisplayFileName(file.fileName)}
+                      >
+                        Скачать
+                      </a>
+                      {canManage ? (
+                        <Button
+                          type="button"
+                          variant="danger"
+                          onClick={async () => {
+                            try {
+                              await sessionsService.deleteMeetingFile(id, file.id);
+                              toast('Файл удалён', 'success');
+                              await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
+                            } catch (error) {
+                              const message = error instanceof ApiError ? error.message : 'Не удалось удалить файл';
+                              toast(message, 'error');
+                            }
+                          }}
+                        >
+                          Удалить
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : null}
@@ -284,11 +287,7 @@ export function SessionDetailPage() {
               <Button
                 type="button"
                 variant="danger"
-                onClick={async () => {
-                  await sessionsService.deleteMeeting(id);
-                  toast('Встреча удалена', 'success');
-                  navigate('/sessions');
-                }}
+                onClick={() => setShowDeleteConfirm(true)}
               >
                 Удалить встречу
               </Button>
@@ -327,25 +326,49 @@ export function SessionDetailPage() {
           onInvite={
             canManage
               ? async (participantIds) => {
-                  await sessionsService.inviteParticipants(id, { participantIds });
-                  toast('Участники приглашены', 'success');
-                  await dispatch(fetchParticipantsThunk(id)).unwrap();
-                  await dispatch(fetchMeetingThunk(id)).unwrap();
-                }
+                await sessionsService.inviteParticipants(id, { participantIds });
+                toast('Участники приглашены', 'success');
+                await dispatch(fetchParticipantsThunk(id)).unwrap();
+                await dispatch(fetchMeetingThunk(id)).unwrap();
+              }
               : undefined
           }
           onRemove={
             canManage
               ? async (userId) => {
-                  await sessionsService.removeParticipant(id, userId);
-                  toast('Участник удалён', 'success');
-                  await dispatch(fetchParticipantsThunk(id)).unwrap();
-                  await dispatch(fetchMeetingThunk(id)).unwrap();
-                }
+                await sessionsService.removeParticipant(id, userId);
+                toast('Участник удалён', 'success');
+                await dispatch(fetchParticipantsThunk(id)).unwrap();
+                await dispatch(fetchMeetingThunk(id)).unwrap();
+              }
               : undefined
           }
         />
       </div>
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Удаление встречи"
+        description={`Вы уверены, что хотите удалить встречу «${meeting.title}»? Это действие нельзя отменить.`}
+        confirmLabel="Удалить"
+        cancelLabel="Отмена"
+        isConfirming={isDeleting}
+        onConfirm={async () => {
+          setIsDeleting(true);
+          try {
+            await sessionsService.deleteMeeting(id);
+            toast('Встреча удалена', 'success');
+            setShowDeleteConfirm(false);
+            navigate('/sessions');
+          } catch (error) {
+            const message = error instanceof ApiError ? error.message : 'Не удалось удалить встречу';
+            toast(message, 'error');
+          } finally {
+            setIsDeleting(false);
+          }
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </PageSection>
   );
 }
