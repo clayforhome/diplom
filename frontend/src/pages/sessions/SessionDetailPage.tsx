@@ -297,7 +297,7 @@ export function SessionDetailPage() {
               await sessionsService.updateMeeting(id, {
                 title: values.title,
                 description: values.description,
-                date: new Date(`${values.date}T00:00:00`).toISOString(),
+                date: `${values.date}T00:00:00.000Z`,
                 startTime: toDateTimeString(values.date, values.startTime),
                 endTime: toDateTimeString(values.date, values.endTime),
                 format: values.format,

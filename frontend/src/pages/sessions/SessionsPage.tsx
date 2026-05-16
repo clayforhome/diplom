@@ -75,7 +75,7 @@ export function SessionsPage() {
             await sessionsService.createMeeting({
               title: values.title,
               description: values.description || undefined,
-              date: new Date(`${values.date}T00:00:00`).toISOString(),
+              date: `${values.date}T00:00:00.000Z`,
               startTime: toDateTimeString(values.date, values.startTime),
               endTime: toDateTimeString(values.date, values.endTime),
               format: values.format,
@@ -92,7 +92,7 @@ export function SessionsPage() {
             await dispatch(
               checkAvailabilityThunk({
                 participantIds: values.participantIds,
-                date: new Date(`${values.date}T00:00:00`).toISOString(),
+                date: `${values.date}T00:00:00.000Z`,
                 startTime: toDateTimeString(values.date, values.startTime),
                 endTime: toDateTimeString(values.date, values.endTime)
               })
