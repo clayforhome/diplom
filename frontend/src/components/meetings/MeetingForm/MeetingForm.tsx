@@ -22,6 +22,7 @@ interface MeetingFormProps {
 
 export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEditing = false, footerActions }: MeetingFormProps) {
   const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof MeetingFormValues, string>>>({});
   const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
   const selectOptions = useUiSelectOptions();
   const toast = useToast();
@@ -84,6 +85,9 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
 
   const updateField = <K extends keyof MeetingFormValues>(field: K, value: MeetingFormValues[K]) => {
     setValues((current) => ({ ...current, [field]: value }));
+    if (errors[field]) {
+      setErrors((current) => ({ ...current, [field]: undefined }));
+    }
   };
 
   const formatOptions = useMemo(
@@ -100,19 +104,37 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
     <Card>
       <form
         className="meeting-form"
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           
-          if (values.date < todayString) {
-            toast('Дата встречи не может быть в прошлом', 'error');
-            return;
+          const newErrors: Partial<Record<keyof MeetingFormValues, string>> = {};
+
+          if (!values.title?.trim()) newErrors.title = 'Обязательное поле';
+
+          if (!values.date) newErrors.date = 'Обязательное поле';
+          else if (values.date < todayString) newErrors.date = 'Не может быть в прошлом';
+          
+          if (!values.startTime) newErrors.startTime = 'Обязательное поле';
+          else if (values.date === todayString && values.startTime < currentTimeString) newErrors.startTime = 'Не может быть в прошлом';
+          
+          if (!values.endTime) newErrors.endTime = 'Обязательное поле';
+          else if (values.endTime <= values.startTime) newErrors.endTime = 'Должно быть позже начала';
+          
+          const isOfflineOrHybrid = values.format === 'Offline' || values.format === 'Hybrid';
+          const isOnlineOrHybrid = values.format === 'Online' || values.format === 'Hybrid';
+
+          if (isOfflineOrHybrid && !values.location?.trim()) {
+            newErrors.location = 'Локация обязательна для данного формата';
           }
-          if (values.date === todayString && values.startTime < currentTimeString) {
-            toast('Время начала не может быть в прошлом', 'error');
-            return;
+
+          if (isOnlineOrHybrid && !values.meetingLink?.trim()) {
+            newErrors.meetingLink = 'Ссылка обязательна для данного формата';
           }
-          if (values.endTime <= values.startTime) {
-            toast('Время окончания должно быть позже времени начала', 'error');
+
+          if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            toast('Пожалуйста, исправьте ошибки в форме', 'error');
             return;
           }
 
@@ -120,7 +142,12 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
         }}
       >
         <div className="meeting-form__grid">
-          <Input label="Название встречи" value={values.title} onChange={(event) => updateField('title', event.target.value)} required />
+          <Input 
+            label="Название встречи" 
+            value={values.title} 
+            onChange={(event) => updateField('title', event.target.value)} 
+            error={errors.title}
+          />
 
           <Input 
             label="Дата" 
@@ -128,7 +155,7 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
             min={todayString}
             value={values.date} 
             onChange={(event) => updateField('date', event.target.value)} 
-            required 
+            error={errors.date}
           />
           <Input 
             label="Начало" 
@@ -136,7 +163,7 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
             min={values.date === todayString ? currentTimeString : undefined}
             value={values.startTime} 
             onChange={(event) => updateField('startTime', event.target.value)} 
-            required 
+            error={errors.startTime}
           />
           <Input 
             label="Окончание" 
@@ -144,14 +171,24 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
             min={values.startTime}
             value={values.endTime} 
             onChange={(event) => updateField('endTime', event.target.value)} 
-            required 
+            error={errors.endTime}
           />
           <Select label="Формат" value={values.format} onChange={(value) => updateField('format', value as MeetingFormat)} options={formatOptions} />
           {isEditing && values.status ? (
             <Select label="Статус" value={values.status} onChange={(value) => updateField('status', value as MeetingStatus)} options={statusOptions} />
           ) : null}
-          <Input label="Локация" value={values.location} onChange={(event) => updateField('location', event.target.value)} />
-          <Input label="Ссылка на встречу" value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} />
+          <Input 
+            label="Локация" 
+            value={values.location} 
+            onChange={(event) => updateField('location', event.target.value)} 
+            error={errors.location}
+          />
+          <Input 
+            label="Ссылка на встречу" 
+            value={values.meetingLink} 
+            onChange={(event) => updateField('meetingLink', event.target.value)} 
+            error={errors.meetingLink}
+          />
           <Input label="Контактная информация" value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
           {!isEditing ? (
             <div className="meeting-form__full-width">

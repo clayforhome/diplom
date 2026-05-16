@@ -27,6 +27,15 @@
     border-color: $color-accent;
     box-shadow: 0 0 0 4px $focus-ring;
   }
+
+  &--invalid {
+    border-color: $color-error;
+    
+    &:focus {
+      border-color: $color-error;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+    }
+  }
 }
 
 .input-field__error {
