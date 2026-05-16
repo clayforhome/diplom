@@ -178,6 +178,19 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
 
     var organizerLogin = configuration.GetValue<string>("OrganizerCredentials:Email")!;
     var organizerPassword = configuration.GetValue<string>("OrganizerCredentials:Password")!;
+    
+    var qaLogin = configuration.GetValue<string>("QACredentials:Email")!;
+    var qaPassword = configuration.GetValue<string>("QACredentials:Password")!;
+    
+    var analystLogin = configuration.GetValue<string>("AnalystCredentials:Email")!;
+    var analystPassword = configuration.GetValue<string>("AnalystCredentials:Password")!;
+    
+    var supportLogin = configuration.GetValue<string>("SupportCredentials:Email")!;
+    var supportPassword = configuration.GetValue<string>("SupportCredentials:Password")!;
+    
+    var backupLogin = configuration.GetValue<string>("BackupCredentials:Email")!;
+    var backupPassword = configuration.GetValue<string>("BackupCredentials:Password")!;
+    
 
     var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
@@ -189,10 +202,10 @@ async Task SetupInitialDataAsync(IServiceScope serviceScope, IConfiguration conf
     var adminUser = await EnsureUserAsync(userManager, adminLogin, adminPassword, "Админ Системов");
     var userUser = await EnsureUserAsync(userManager, userLogin, userPassword, "Пользователь Тестов");
     var organizerUser = await EnsureUserAsync(userManager, organizerLogin, organizerPassword, "Организатор Встречин");
-    var qaUser = await EnsureUserAsync(userManager, "qa.engineer@gmail.com", "QaEngineer123+", "Инженер Тестов");
-    var analystUser = await EnsureUserAsync(userManager, "business.analyst@gmail.com", "Analyst123+", "Аналитик Процессов");
-    var supportUser = await EnsureUserAsync(userManager, "support.manager@gmail.com", "Support123+", "Менеджер Поддержки");
-    var backupOrganizer = await EnsureUserAsync(userManager, "backup.organizer@gmail.com", "BackupOrganizer123+", "Координатор Резервный");
+    var qaUser = await EnsureUserAsync(userManager, qaLogin, qaPassword, "Инженер Тестов");
+    var analystUser = await EnsureUserAsync(userManager, analystLogin, analystPassword, "Аналитик Процессов");
+    var supportUser = await EnsureUserAsync(userManager, supportLogin, supportPassword, "Менеджер Поддержки");
+    var backupOrganizer = await EnsureUserAsync(userManager, backupLogin, backupPassword, "Координатор Резервный");
 
     await EnsureOnlyRolesAsync(userManager, adminUser, [Role.Admin]);
     await EnsureOnlyRolesAsync(userManager, userUser, [Role.User]);
