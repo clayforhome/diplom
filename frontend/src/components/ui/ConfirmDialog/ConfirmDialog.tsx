@@ -31,9 +31,18 @@ export function ConfirmDialog({
 
     if (isOpen) {
       dialog.showModal();
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
     } else {
       dialog.close();
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
     }
+
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   // Close on backdrop click
