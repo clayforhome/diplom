@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TemplateProject.Common;
 using TemplateProject.DataAccess;
+using TemplateProject.Domain;
 
 namespace TemplateProject.Features.User;
 
@@ -68,7 +69,7 @@ public class SignUpCommand : IFeatureEndpoint
                 Name = request.Model.Name,
                 Age = request.Model.Age,
                 RegistrationDate = _timeProvider.GetUtcNow().UtcDateTime,
-                EmailConfirmed = true
+                EmailConfirmed = true,
             };
             
             var result = await _userManager.CreateAsync(user, request.Model.Password);
@@ -77,6 +78,8 @@ public class SignUpCommand : IFeatureEndpoint
             {
                 return ApiErrors.BadRequest.Instance;
             }
+            
+            await _userManager.AddToRoleAsync(user, Role.User);
             
             await _context.SaveChangesAsync(cancellationToken);
             

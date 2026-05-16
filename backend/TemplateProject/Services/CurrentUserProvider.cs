@@ -37,10 +37,4 @@ public class CurrentUserProvider
     {
         _currentUserId = userId;
     }
-
-    public string GetRole()
-    {
-        var role = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Role);
-        return role!.Value;
-    }
 }

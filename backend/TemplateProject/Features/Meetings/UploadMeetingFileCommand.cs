@@ -76,7 +76,15 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
-            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
+            
+            var usersRole = await _context.Users
+                .Where(x => x.Id == currentUserId)
+                .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+                .SingleAsync(cancellationToken);
+            
+            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
+            
             if (currentUserId == null || currentUserId == Guid.Empty)
             {
                 return ApiErrors.Unauthorized.Instance;

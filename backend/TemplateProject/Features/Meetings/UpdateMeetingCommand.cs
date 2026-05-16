@@ -81,7 +81,14 @@ public class UpdateMeetingCommand : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var userId = _currentUserProvider.GetCurrentUserId();
-            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
+            
+            var usersRole = await _context.Users
+                .Where(x => x.Id == userId)
+                .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+                .SingleAsync(cancellationToken);
+            
+            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
 
             var meeting = await _context.Meetings
                 .FirstOrDefaultAsync(m => m.Id == request.Id && !m.IsDeleted, cancellationToken);
@@ -129,11 +136,11 @@ public class UpdateMeetingCommand : IFeatureEndpoint
             if (request.Model.Date.HasValue)
                 meeting.Date = request.Model.Date.Value;
 
-            if (request.Model.StartTime.HasValue)
-                meeting.StartTime = request.Model.StartTime.Value;
+            if (request.Model.StartTime.HasValue && meeting.StartTime != request.Model.StartTime.Value)
+                meeting.StartTime = request.Model.StartTime.Value.ToUniversalTime();
 
-            if (request.Model.EndTime.HasValue)
-                meeting.EndTime = request.Model.EndTime.Value;
+            if (request.Model.EndTime.HasValue && meeting.EndTime != request.Model.EndTime.Value)
+                meeting.EndTime = request.Model.EndTime.Value.ToUniversalTime();
 
             if (request.Model.Format.HasValue)
             {

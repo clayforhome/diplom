@@ -49,7 +49,14 @@ public class DeleteMeetingCommand : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var userId = _currentUserProvider.GetCurrentUserId();
-            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
+            
+            var usersRole = await _context.Users
+                .Where(x => x.Id == userId)
+                .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+                .SingleAsync(cancellationToken);
+            
+            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
 
             var meeting = await _context.Meetings
                 .FirstOrDefaultAsync(m => m.Id == request.Id && !m.IsDeleted, cancellationToken);

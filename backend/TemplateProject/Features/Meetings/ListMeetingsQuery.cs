@@ -72,7 +72,14 @@ public class ListMeetingsQuery : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var userId = _currentUserProvider.GetCurrentUserId();
-            var isAdmin = string.Equals(_currentUserProvider.GetRole(), Role.Admin, StringComparison.Ordinal);
+            
+            var usersRole = await _context.Users
+                .Where(x => x.Id == userId)
+                .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+                .SingleAsync(cancellationToken);
+            
+            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
 
             var query = _context.Meetings
                 .Where(m => !m.IsDeleted);
@@ -101,8 +108,8 @@ public class ListMeetingsQuery : IFeatureEndpoint
                     Title = m.Title,
                     Description = m.Description,
                     Date = m.Date,
-                    StartTime = m.StartTime,
-                    EndTime = m.EndTime,
+                    StartTime = m.StartTime.ToUniversalTime(),
+                    EndTime = m.EndTime.ToUniversalTime(),
                     Format = m.Format,
                     Status = m.Status,
                     OrganizerId = m.OrganizerId
