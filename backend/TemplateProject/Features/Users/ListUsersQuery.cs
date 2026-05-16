@@ -52,6 +52,7 @@ public class ListUsersQuery : IFeatureEndpoint
         public int? Age { get; set; }
         public bool EmailConfirmed { get; set; }
         public DateTime? RegistrationDate { get; set; }
+        public List<string> Roles { get; set; } = [];
     }
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
@@ -65,7 +66,7 @@ public class ListUsersQuery : IFeatureEndpoint
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            var query = _context.Users;
+            var query = _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role);
 
             var total = await query.CountAsync(cancellationToken);
 
@@ -82,7 +83,8 @@ public class ListUsersQuery : IFeatureEndpoint
                     Age = u.Age,
                     Name = u.Name,
                     EmailConfirmed = u.EmailConfirmed,
-                    RegistrationDate = u.RegistrationDate
+                    RegistrationDate = u.RegistrationDate,
+                    Roles = u.UserRoles.Select(ur => ur.Role.Name ?? "").ToList()
                 })
                 .ToListAsync(cancellationToken);
 

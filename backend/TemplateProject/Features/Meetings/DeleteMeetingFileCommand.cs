@@ -50,7 +50,7 @@ public class DeleteMeetingFileCommand : IFeatureEndpoint
                 .ThenInclude(x => x.Role)
                 .SingleAsync(cancellationToken);
             
-            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
+            var isAdmin = usersRole.UserRoles.Any(ur => string.Equals(ur.Role.Name, Role.Admin, StringComparison.Ordinal));
             
             if (currentUserId == null || currentUserId == Guid.Empty)
             {

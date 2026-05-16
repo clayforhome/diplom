@@ -79,7 +79,7 @@ public class ListMeetingsQuery : IFeatureEndpoint
                 .ThenInclude(x => x.Role)
                 .SingleAsync(cancellationToken);
             
-            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
+            var isAdmin = usersRole.UserRoles.Any(ur => string.Equals(ur.Role.Name, Role.Admin, StringComparison.Ordinal));
 
             var query = _context.Meetings
                 .Where(m => !m.IsDeleted);

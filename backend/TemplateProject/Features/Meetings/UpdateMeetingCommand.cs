@@ -88,7 +88,7 @@ public class UpdateMeetingCommand : IFeatureEndpoint
                 .ThenInclude(x => x.Role)
                 .SingleAsync(cancellationToken);
             
-            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
+            var isAdmin = usersRole.UserRoles.Any(ur => string.Equals(ur.Role.Name, Role.Admin, StringComparison.Ordinal));
 
             var meeting = await _context.Meetings
                 .FirstOrDefaultAsync(m => m.Id == request.Id && !m.IsDeleted, cancellationToken);
@@ -106,7 +106,7 @@ public class UpdateMeetingCommand : IFeatureEndpoint
             var newStatus = request.Model.Status;
 
             // Check time validation if both times are provided or updating only one
-            if ((request.Model.StartTime.HasValue || request.Model.EndTime.HasValue))
+            if (request.Model.StartTime.HasValue || request.Model.EndTime.HasValue)
             {
                 var startTime = request.Model.StartTime ?? meeting.StartTime;
                 var endTime = request.Model.EndTime ?? meeting.EndTime;

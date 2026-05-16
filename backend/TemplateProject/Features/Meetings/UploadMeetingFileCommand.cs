@@ -61,7 +61,7 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
             ".txt",
             ".jpg",
             ".jpeg",
-            ".png"
+            ".png",
         };
 
         private readonly DatabaseContext _context;
@@ -77,13 +77,13 @@ public class UploadMeetingFileCommand : IFeatureEndpoint
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
             
-            var usersRole = await _context.Users
+             var usersRole = await _context.Users
                 .Where(x => x.Id == currentUserId)
                 .Include(x => x.UserRoles)
                 .ThenInclude(x => x.Role)
                 .SingleAsync(cancellationToken);
             
-            var isAdmin = string.Equals(usersRole.UserRoles[0].Role.Name, Role.Admin, StringComparison.Ordinal);
+            var isAdmin = usersRole.UserRoles.Any(ur => string.Equals(ur.Role.Name, Role.Admin, StringComparison.Ordinal));
             
             if (currentUserId == null || currentUserId == Guid.Empty)
             {
