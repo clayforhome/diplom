@@ -12,6 +12,8 @@ export function DashboardPage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const meetings = useAppSelector((state) => state.sessions.meetings);
+  const isLoading = useAppSelector((state) => state.sessions.isLoading);
+  const totalMeetings = useAppSelector((state) => state.sessions.pagination.total);
   const roles = user?.roles ?? [];
   const isAdmin = roles.includes('Admin');
   const isOrganizer = roles.includes('Organizer');
@@ -43,10 +45,9 @@ export function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (meetings.length === 0) {
-      void dispatch(fetchMeetingsThunk({ page: 1, limit: 12 }));
-    }
-  }, [dispatch, meetings.length]);
+    void dispatch(fetchMeetingsThunk({ page: 1, limit: 100 }));
+  }, [dispatch]);
+
 
   return (
     <PageSection title="Главная панель" subtitle="Быстрый обзор текущего аккаунта и встреч" actions={<Link to="/sessions">К реестру встреч</Link>}>
@@ -83,17 +84,17 @@ export function DashboardPage() {
       <div className="dashboard-metrics">
         <article className="dashboard-metric">
           <span className="dashboard-metric__label">Всего встреч</span>
-          <strong>{meetings.length}</strong>
+          <strong>{isLoading ? '—' : totalMeetings}</strong>
           <p>Актуальный объём встреч в вашем рабочем контуре.</p>
         </article>
         <article className="dashboard-metric">
           <span className="dashboard-metric__label">Подтверждено</span>
-          <strong>{confirmedMeetings}</strong>
+          <strong>{isLoading ? '—' : confirmedMeetings}</strong>
           <p>Встречи, по которым уже есть финальное подтверждение.</p>
         </article>
         <article className="dashboard-metric">
           <span className="dashboard-metric__label">Под вашим контролем</span>
-          <strong>{managedMeetings}</strong>
+          <strong>{isLoading ? '—' : managedMeetings}</strong>
           <p>Сессии, где текущий аккаунт выступает организатором.</p>
         </article>
       </div>

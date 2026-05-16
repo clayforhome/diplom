@@ -100,10 +100,11 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
       >
         <div className="meeting-form__grid">
           <Input label="Название встречи" value={values.title} onChange={(event) => updateField('title', event.target.value)} required />
-          <Select label="Формат" value={values.format} onChange={(value) => updateField('format', value as MeetingFormat)} options={formatOptions} />
+
           <Input label="Дата" type="date" value={values.date} onChange={(event) => updateField('date', event.target.value)} required />
           <Input label="Начало" type="time" value={values.startTime} onChange={(event) => updateField('startTime', event.target.value)} required />
           <Input label="Окончание" type="time" value={values.endTime} onChange={(event) => updateField('endTime', event.target.value)} required />
+          <Select label="Формат" value={values.format} onChange={(value) => updateField('format', value as MeetingFormat)} options={formatOptions} />
           {isEditing && values.status ? (
             <Select label="Статус" value={values.status} onChange={(value) => updateField('status', value as MeetingStatus)} options={statusOptions} />
           ) : null}

@@ -215,6 +215,22 @@ export interface AdminUser {
   registrationDate: string | null;
 }
 
+export interface GetRolesResponseData {
+  roles: string[];
+}
+
+export interface GetUserRolesResponseData {
+  roles: string[];
+}
+
+export interface UpdateUserRolesRequest {
+  roles: string[];
+}
+
+export interface UpdateUserRolesResponseData {
+  message: string;
+}
+
 export interface ToastItem {
   id: string;
   title: string;

@@ -213,3 +213,112 @@
     width: 100%;
   }
 }
+
+// ── Roles panel ───────────────────────────────────────────────────────────────
+
+.user-roles-panel {
+  border: 1px solid rgba(0, 113, 227, 0.18);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.user-roles-panel__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0071e3;
+  text-align: left;
+  transition: background 0.18s;
+
+  &:hover {
+    background: rgba(0, 113, 227, 0.06);
+  }
+}
+
+.user-roles-panel__toggle-label {
+  flex: 0 0 auto;
+}
+
+.user-roles-panel__toggle-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex: 1 1 auto;
+}
+
+.user-roles-panel__chevron {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-block;
+  transition: transform 0.2s;
+  font-style: normal;
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.user-roles-panel__body {
+  padding: 0.85rem 1rem 1rem;
+  border-top: 1px solid rgba(0, 113, 227, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.user-roles-panel__loading {
+  margin: 0;
+  color: $text-secondary;
+  font-size: 0.88rem;
+}
+
+.user-roles-panel__checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-roles-panel__checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.6rem;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(0, 113, 227, 0.06);
+  }
+
+  input[type='checkbox'] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #0071e3;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.user-roles-panel__role-name {
+  flex: 1 1 auto;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.user-roles-panel__footer {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(0, 113, 227, 0.1);
+}
+
