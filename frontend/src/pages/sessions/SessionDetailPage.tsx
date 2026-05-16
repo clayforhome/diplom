@@ -105,6 +105,8 @@ export function SessionDetailPage() {
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [fileToRemove, setFileToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [isFileRemoving, setIsFileRemoving] = useState(false);
   const meeting = useAppSelector((state) => state.sessions.selectedMeeting);
   const participants = useAppSelector((state) => state.sessions.participants);
   const auth = useAppSelector((state) => state.auth);
@@ -258,16 +260,7 @@ export function SessionDetailPage() {
                         <Button
                           type="button"
                           variant="danger"
-                          onClick={async () => {
-                            try {
-                              await sessionsService.deleteMeetingFile(id, file.id);
-                              toast('Файл удалён', 'success');
-                              await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
-                            } catch (error) {
-                              const message = error instanceof ApiError ? error.message : 'Не удалось удалить файл';
-                              toast(message, 'error');
-                            }
-                          }}
+                          onClick={() => setFileToRemove({ id: file.id, name: getDisplayFileName(file.fileName) })}
                         >
                           Удалить
                         </Button>
@@ -368,6 +361,31 @@ export function SessionDetailPage() {
           }
         }}
         onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(fileToRemove)}
+        title="Удаление файла"
+        description={`Вы уверены, что хотите удалить файл «${fileToRemove?.name}»?`}
+        confirmLabel="Удалить"
+        cancelLabel="Отмена"
+        isConfirming={isFileRemoving}
+        onConfirm={async () => {
+          if (!fileToRemove) return;
+          setIsFileRemoving(true);
+          try {
+            await sessionsService.deleteMeetingFile(id, fileToRemove.id);
+            toast('Файл удалён', 'success');
+            setFileToRemove(null);
+            await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
+          } catch (error) {
+            const message = error instanceof ApiError ? error.message : 'Не удалось удалить файл';
+            toast(message, 'error');
+          } finally {
+            setIsFileRemoving(false);
+          }
+        }}
+        onCancel={() => setFileToRemove(null)}
       />
     </PageSection>
   );

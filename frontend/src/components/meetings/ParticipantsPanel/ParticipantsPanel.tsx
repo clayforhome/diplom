@@ -7,6 +7,7 @@ import { sessionsService } from '../../../http/sessionsService';
 import type { InvitationStatus, OrganizerUser, Participant } from '../../../types';
 import { formatDate, formatTime } from '../../../utils/format';
 import { getInvitationStatusLabel } from '../../../utils/meetingLabels';
+import { ConfirmDialog } from '../../ui/ConfirmDialog/ConfirmDialog';
 import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './ParticipantsPanel.scss';
 
@@ -23,6 +24,8 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
   const [comment, setComment] = useState('');
   const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
   const [inviteSelection, setInviteSelection] = useState<string[]>([]);
+  const [participantToRemove, setParticipantToRemove] = useState<Participant | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   useEffect(() => {
     if (!onInvite) {
@@ -77,7 +80,7 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
                 {getInvitationStatusLabel(participant.invitationStatus)}
               </Badge>
               {onRemove ? (
-                <Button variant="secondary" onClick={() => onRemove(participant.userId)}>
+                <Button variant="secondary" onClick={() => setParticipantToRemove(participant)}>
                   Удалить
                 </Button>
               ) : null}
@@ -105,6 +108,26 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
           </div>
         ) : null}
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(participantToRemove)}
+        title="Удаление участника"
+        description={`Вы уверены, что хотите удалить участника «${participantToRemove?.userName || participantToRemove?.email || participantToRemove?.userId}» из этой встречи?`}
+        confirmLabel="Удалить"
+        cancelLabel="Отмена"
+        isConfirming={isRemoving}
+        onConfirm={async () => {
+          if (!participantToRemove || !onRemove) return;
+          setIsRemoving(true);
+          try {
+            await onRemove(participantToRemove.userId);
+            setParticipantToRemove(null);
+          } finally {
+            setIsRemoving(false);
+          }
+        }}
+        onCancel={() => setParticipantToRemove(null)}
+      />
     </Card>
   );
 }
