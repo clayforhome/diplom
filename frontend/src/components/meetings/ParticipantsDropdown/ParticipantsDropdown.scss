@@ -5,6 +5,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  &--open {
+    z-index: 30;
+  }
 }
 
 .participants-dropdown__label {

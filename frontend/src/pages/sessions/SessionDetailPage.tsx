@@ -313,7 +313,7 @@ export function SessionDetailPage() {
         ) : null}
         <ParticipantsPanel
           participants={participants}
-          canRespond
+          canRespond={meeting.status !== 'Confirmed' && meeting.status !== 'Completed' && meeting.status !== 'Cancelled'}
           currentUserId={auth.user?.id}
           onRespond={async (status, comment) => {
             if (!auth.user?.id) {

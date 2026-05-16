@@ -5,7 +5,7 @@ import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchMeetingsThunk } from '../../store/slices/sessionsSlice';
 import { formatDate, formatDateTimeRange } from '../../utils/format';
-import { getMeetingStatusLabel } from '../../utils/meetingLabels';
+import { getMeetingStatusLabel, getMeetingStatusTone } from '../../utils/meetingLabels';
 import { getUserRoleLabel } from '../../utils/userLabels';
 
 export function DashboardPage() {
@@ -128,7 +128,7 @@ export function DashboardPage() {
                     <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
                   </div>
                   <div className="dashboard-timeline__meta">
-                    <span>{getMeetingStatusLabel(meeting.status)}</span>
+                    <Badge tone={getMeetingStatusTone(meeting.status)}>{getMeetingStatusLabel(meeting.status)}</Badge>
                     <span>{formatDate(meeting.date)}</span>
                     <span>{formatDateTimeRange(meeting.startTime, meeting.endTime)}</span>
                   </div>

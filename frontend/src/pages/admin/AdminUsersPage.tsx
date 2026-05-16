@@ -11,6 +11,7 @@ import { authService } from '../../http/authService';
 import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { ApiError } from '../../http/httpClient';
 import { useToast } from '../../hooks/useToast';
+import { useAppSelector } from '../../store/hooks';
 import type { AdminUser } from '../../types';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getProfileInitials } from '../../utils/profile';
@@ -187,6 +188,7 @@ function UserRolesPanel({ userId, allRoles }: UserRolesPanelProps) {
 // ── Main page component ────────────────────────────────────────────────────────
 export function AdminUsersPage() {
   const selectOptions = useUiSelectOptions();
+  const currentUser = useAppSelector((state) => state.auth.user);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -241,8 +243,10 @@ export function AdminUsersPage() {
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
 
+    const usersExceptCurrent = users.filter((user) => user.id !== currentUser?.id);
+
     const searchedUsers = query
-      ? users.filter((user) =>
+      ? usersExceptCurrent.filter((user) =>
           [
             getDisplayName(user.name, user.userName, user.email),
             user.name,
@@ -255,7 +259,7 @@ export function AdminUsersPage() {
             .map((value) => normalizeValue(value))
             .some((value) => value.includes(query))
         )
-      : users;
+      : usersExceptCurrent;
 
     return [...searchedUsers].sort((left, right) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
@@ -281,7 +285,7 @@ export function AdminUsersPage() {
 
       return leftValue.localeCompare(rightValue, 'ru') * direction;
     });
-  }, [search, sortDirection, sortKey, users]);
+  }, [search, sortDirection, sortKey, users, currentUser?.id]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 

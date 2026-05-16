@@ -34,3 +34,11 @@ export function getMeetingStatusLabel(status: MeetingStatus): string {
 export function getInvitationStatusLabel(status: InvitationStatus): string {
   return invitationStatusLabels[status];
 }
+
+export function getMeetingStatusTone(status: MeetingStatus): 'success' | 'danger' | 'warning' | 'info' | 'neutral' {
+  if (status === 'Confirmed' || status === 'Completed') return 'success';
+  if (status === 'Cancelled') return 'danger';
+  if (status === 'Rescheduled' || status === 'AwaitingConfirmation') return 'warning';
+  if (status === 'Scheduled') return 'info';
+  return 'neutral';
+}
