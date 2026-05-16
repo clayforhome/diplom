@@ -29,11 +29,27 @@ export function ConfirmDialog({
     const dialog = dialogRef.current;
     if (!dialog) return;
 
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
     if (isOpen) {
       dialog.showModal();
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
     } else {
       dialog.close();
+      document.body.style.paddingRight = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
     }
+
+    return () => {
+      document.body.style.paddingRight = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   // Close on backdrop click
