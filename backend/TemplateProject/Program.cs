@@ -124,6 +124,12 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
+// CORS must be BEFORE UseRouting and Authentication
+app.UseCors(c =>
+    c.AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -132,10 +138,6 @@ app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseCors(c =>
-        c.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
     app.UseSwaggerUI(c => { c.SwaggerEndpoint("/openapi/v1.json", "TemplateProject API V1"); });
     app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 }
