@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
+import { LanguageSwitcher } from '../../components/i18n/LanguageSwitcher/LanguageSwitcher';
 import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
 import { Input } from '../../components/ui/Input/Input';
-import { useAppDispatch } from '../../store/hooks';
-import { fetchCurrentUserThunk, loginThunk } from '../../store/slices/authSlice';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
+import { useAppDispatch } from '../../store/hooks';
+import { fetchCurrentUserThunk, loginThunk } from '../../store/slices/authSlice';
 import './AuthPage.scss';
 
 export function LoginPage() {
@@ -14,12 +16,13 @@ export function LoginPage() {
   const dispatch = useAppDispatch();
   const toast = useToast();
   const { isLoading, isAuthenticated } = useAuth();
+  const { t, i18n } = useTranslation();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
 
   useEffect(() => {
-    document.title = 'Вход - Система управления встречами';
-  }, []);
+    document.title = `${t('auth.loginTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -37,23 +40,26 @@ export function LoginPage() {
             try {
               await dispatch(loginThunk({ login, password })).unwrap();
               await dispatch(fetchCurrentUserThunk()).unwrap();
-              toast('С возвращением', 'success');
+              toast(t('auth.loginSuccess'), 'success');
               navigate('/');
             } catch {
-              toast('Не удалось войти в систему', 'error');
+              toast(t('auth.loginError'), 'error');
             }
           }}
         >
-          <div className="auth-page__hero">
-            <h1 className="auth-page__title">Войдите в систему встреч</h1>
+          <div className="auth-page__topbar">
+            <LanguageSwitcher />
           </div>
-          <Input label="Эл. почта или логин" value={login} onChange={(event) => setLogin(event.target.value)} required />
-          <Input label="Пароль" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <div className="auth-page__hero">
+            <h1 className="auth-page__title">{t('auth.loginHeading')}</h1>
+          </div>
+          <Input label={t('auth.loginField')} value={login} onChange={(event) => setLogin(event.target.value)} required />
+          <Input label={t('auth.passwordField')} type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
           <Button type="submit" fullWidth disabled={isLoading}>
-            Войти
+            {t('auth.loginButton')}
           </Button>
           <p className="auth-page__switch">
-            Нет аккаунта? <Link to="/auth/register">Зарегистрироваться</Link>
+            {t('auth.noAccount')} <Link to="/auth/register">{t('auth.registerLink')}</Link>
           </p>
         </form>
       </Card>

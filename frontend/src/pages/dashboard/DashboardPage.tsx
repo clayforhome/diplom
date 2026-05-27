@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Badge } from '../../components/ui/Badge/Badge';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
+import { Badge } from '../../components/ui/Badge/Badge';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchMeetingsThunk } from '../../store/slices/sessionsSlice';
 import { formatDate, formatDateTimeRange } from '../../utils/format';
@@ -10,6 +11,7 @@ import { getUserRoleLabel } from '../../utils/userLabels';
 
 export function DashboardPage() {
   const dispatch = useAppDispatch();
+  const { t, i18n } = useTranslation();
   const { user } = useAppSelector((state) => state.auth);
   const meetings = useAppSelector((state) => state.sessions.meetings);
   const isLoading = useAppSelector((state) => state.sessions.isLoading);
@@ -30,31 +32,46 @@ export function DashboardPage() {
   const managedMeetings = useMemo(() => meetings.filter((meeting) => meeting.organizerId === user?.id).length, [meetings, user?.id]);
   const confirmedMeetings = useMemo(() => meetings.filter((meeting) => meeting.status === 'Confirmed').length, [meetings]);
   const workspaceLabel = isAdmin
-    ? 'Администрирование и контроль доступа'
+    ? t('dashboard.adminWorkspace')
     : isOrganizer
-      ? 'Координация встреч и участников'
-      : 'Личный обзор и участие во встречах';
+      ? t('dashboard.organizerWorkspace')
+      : t('dashboard.userWorkspace');
   const quickActions = [
-    { to: '/sessions', title: 'Открыть встречи', description: 'Перейти к расписанию, фильтрам и деталям встреч.' },
-    { to: '/profile', title: 'Открыть профиль', description: 'Проверить данные аккаунта, роли и параметры доступа.' },
-    ...(isAdmin ? [{ to: '/admin', title: 'Открыть админ-панель', description: 'Перейти к административным разделам и списку пользователей.' }] : [])
+    {
+      to: '/sessions',
+      title: t('dashboard.quickActionMeetingsTitle'),
+      description: t('dashboard.quickActionMeetingsDescription')
+    },
+    {
+      to: '/profile',
+      title: t('dashboard.quickActionProfileTitle'),
+      description: t('dashboard.quickActionProfileDescription')
+    },
+    ...(isAdmin
+      ? [
+          {
+            to: '/admin',
+            title: t('dashboard.quickActionAdminTitle'),
+            description: t('dashboard.quickActionAdminDescription')
+          }
+        ]
+      : [])
   ];
 
   useEffect(() => {
-    document.title = 'Главная - Система управления встречами';
-  }, []);
+    document.title = `${t('dashboard.pageTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
   useEffect(() => {
     void dispatch(fetchMeetingsThunk({ page: 1, limit: 100 }));
   }, [dispatch]);
 
-
   return (
-    <PageSection title="Главная панель" subtitle="Быстрый обзор текущего аккаунта и встреч" actions={<Link to="/sessions">К реестру встреч</Link>}>
+    <PageSection title={t('dashboard.title')} subtitle={t('dashboard.subtitle')} actions={<Link to="/sessions">{t('dashboard.registryLink')}</Link>}>
       <div className="dashboard-hero">
         <div className="dashboard-hero__content">
-          <span className="dashboard-hero__eyebrow">Обзор рабочего пространства</span>
-          <h2>{user?.userName ?? user?.name ?? 'Пользователь'}</h2>
+          <span className="dashboard-hero__eyebrow">{t('dashboard.workspaceEyebrow')}</span>
+          <h2>{user?.userName ?? user?.name ?? t('common.user')}</h2>
           <p>{workspaceLabel}</p>
           <div className="dashboard-hero__badges">
             {roles.map((role) => (
@@ -65,7 +82,7 @@ export function DashboardPage() {
           </div>
         </div>
         <div className="dashboard-hero__spotlight">
-          <span className="dashboard-hero__spotlight-label">Ближайший фокус</span>
+          <span className="dashboard-hero__spotlight-label">{t('dashboard.focusLabel')}</span>
           {nextMeeting ? (
             <>
               <strong>{nextMeeting.title}</strong>
@@ -74,8 +91,8 @@ export function DashboardPage() {
             </>
           ) : (
             <>
-              <strong>Свободное окно</strong>
-              <span>Пока нет ближайших встреч в расписании.</span>
+              <strong>{t('dashboard.freeWindowTitle')}</strong>
+              <span>{t('dashboard.freeWindowDescription')}</span>
             </>
           )}
         </div>
@@ -83,26 +100,26 @@ export function DashboardPage() {
 
       <div className="dashboard-metrics">
         <article className="dashboard-metric">
-          <span className="dashboard-metric__label">Всего встреч</span>
+          <span className="dashboard-metric__label">{t('dashboard.totalMeetings')}</span>
           <strong>{isLoading ? '—' : totalMeetings}</strong>
-          <p>Актуальный объём встреч в вашем рабочем контуре.</p>
+          <p>{t('dashboard.totalMeetingsDescription')}</p>
         </article>
         <article className="dashboard-metric">
-          <span className="dashboard-metric__label">Подтверждено</span>
+          <span className="dashboard-metric__label">{t('dashboard.confirmedMeetings')}</span>
           <strong>{isLoading ? '—' : confirmedMeetings}</strong>
-          <p>Встречи, по которым уже есть финальное подтверждение.</p>
+          <p>{t('dashboard.confirmedMeetingsDescription')}</p>
         </article>
         <article className="dashboard-metric">
-          <span className="dashboard-metric__label">Под вашим контролем</span>
+          <span className="dashboard-metric__label">{t('dashboard.managedMeetings')}</span>
           <strong>{isLoading ? '—' : managedMeetings}</strong>
-          <p>Сессии, где текущий аккаунт выступает организатором.</p>
+          <p>{t('dashboard.managedMeetingsDescription')}</p>
         </article>
       </div>
 
       <div className="dashboard-layout">
         <section className="dashboard-panel">
           <div className="dashboard-panel__header">
-            <h3>Быстрые действия</h3>
+            <h3>{t('dashboard.quickActionsTitle')}</h3>
           </div>
           <div className="dashboard-actions">
             {quickActions.map((action) => (
@@ -116,8 +133,8 @@ export function DashboardPage() {
 
         <section className="dashboard-panel">
           <div className="dashboard-panel__header">
-            <h3>Что происходит сейчас</h3>
-            <span>Короткая навигация по дню</span>
+            <h3>{t('dashboard.currentTitle')}</h3>
+            <span>{t('dashboard.currentSubtitle')}</span>
           </div>
           {upcomingMeetings.length > 0 ? (
             <div className="dashboard-timeline">
@@ -125,7 +142,7 @@ export function DashboardPage() {
                 <article key={meeting.id} className="dashboard-timeline__item">
                   <div>
                     <strong>{meeting.title}</strong>
-                    <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
+                    <p>{meeting.description || t('dashboard.meetingDescriptionFallback')}</p>
                   </div>
                   <div className="dashboard-timeline__meta">
                     <Badge tone={getMeetingStatusTone(meeting.status)}>{getMeetingStatusLabel(meeting.status)}</Badge>
@@ -137,8 +154,8 @@ export function DashboardPage() {
             </div>
           ) : (
             <div className="dashboard-empty-strip">
-              <strong>Расписание пока свободно</strong>
-              <p>Когда появятся встречи, здесь будет компактная лента ближайших событий.</p>
+              <strong>{t('dashboard.emptyScheduleTitle')}</strong>
+              <p>{t('dashboard.emptyScheduleDescription')}</p>
             </div>
           )}
         </section>
@@ -146,21 +163,21 @@ export function DashboardPage() {
         {isOrganizer || isAdmin ? (
           <section className="dashboard-panel dashboard-panel--accent">
             <div className="dashboard-panel__header">
-              <h3>Панель организатора</h3>
-              <span>Для координации встреч</span>
+              <h3>{t('dashboard.organizerPanelTitle')}</h3>
+              <span>{t('dashboard.organizerPanelSubtitle')}</span>
             </div>
             <div className="dashboard-organizer">
               <div>
                 <strong>{managedMeetings}</strong>
-                <span>встреч под управлением</span>
+                <span>{t('dashboard.managedCount')}</span>
               </div>
               <div>
                 <strong>{upcomingMeetings.length}</strong>
-                <span>предстоящих событий</span>
+                <span>{t('dashboard.upcomingCount')}</span>
               </div>
               <div>
-                <strong>{isAdmin ? 'Админ + Организатор' : 'Организатор'}</strong>
-                <span>активный рабочий режим</span>
+                <strong>{isAdmin ? t('dashboard.adminOrganizerMode') : t('dashboard.organizerMode')}</strong>
+                <span>{t('dashboard.activeMode')}</span>
               </div>
             </div>
           </section>

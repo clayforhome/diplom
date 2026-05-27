@@ -20,6 +20,11 @@
   gap: 1rem;
 }
 
+.auth-page__topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .auth-page__hero {
   display: flex;
   flex-direction: column;

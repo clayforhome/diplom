@@ -1,51 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { PageSection } from '../../components/layout/PageSection/PageSection';
+import { Badge } from '../../components/ui/Badge/Badge';
+import { Button } from '../../components/ui/Button/Button';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog/ConfirmDialog';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { Input } from '../../components/ui/Input/Input';
 import { Select } from '../../components/ui/Select/Select';
-import { Button } from '../../components/ui/Button/Button';
-import { Badge } from '../../components/ui/Badge/Badge';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog/ConfirmDialog';
-import { PageSection } from '../../components/layout/PageSection/PageSection';
-import { usersService } from '../../http/usersService';
 import { authService } from '../../http/authService';
-import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { ApiError } from '../../http/httpClient';
+import { usersService } from '../../http/usersService';
 import { useToast } from '../../hooks/useToast';
+import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { useAppSelector } from '../../store/hooks';
 import type { AdminUser } from '../../types';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getProfileInitials } from '../../utils/profile';
+import { getUserRoleLabel } from '../../utils/userLabels';
 import './AdminUsersPage.scss';
 
 type SortKey = 'name' | 'userName' | 'email' | 'age' | 'registrationDate' | 'id';
 type SortDirection = 'asc' | 'desc';
-
-const fallbackSortOptions = [
-  { value: 'name', label: 'Имя' },
-  { value: 'userName', label: 'ФИО' },
-  { value: 'email', label: 'Эл. почта' },
-  { value: 'age', label: 'Возраст' },
-  { value: 'registrationDate', label: 'Дата регистрации' },
-  { value: 'id', label: 'ID' }
-];
-
-const fallbackDirectionOptions = [
-  { value: 'asc', label: 'По возрастанию' },
-  { value: 'desc', label: 'По убыванию' }
-];
-
-const fallbackPageSizeOptions = [
-  { value: '6', label: '6' },
-  { value: '12', label: '12' },
-  { value: '24', label: '24' },
-  { value: '48', label: '48' }
-];
-
-const ROLE_LABELS: Record<string, string> = {
-  Admin: 'Администратор',
-  Organizer: 'Организатор',
-  User: 'Пользователь'
-};
 
 const ROLE_TONES: Record<string, 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
   Admin: 'danger',
@@ -57,7 +32,6 @@ function normalizeValue(value: string | number | boolean | null | undefined): st
   return String(value ?? '').trim().toLowerCase();
 }
 
-// ── Roles panel for a single user ─────────────────────────────────────────────
 interface UserRolesPanelProps {
   userId: string;
   allRoles: string[];
@@ -65,6 +39,7 @@ interface UserRolesPanelProps {
 
 function UserRolesPanel({ userId, allRoles }: UserRolesPanelProps) {
   const toast = useToast();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [currentRoles, setCurrentRoles] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
@@ -81,12 +56,13 @@ function UserRolesPanel({ userId, allRoles }: UserRolesPanelProps) {
         setSelectedRoles(data.roles);
         loadedRef.current = true;
       } catch {
-        toast('Не удалось загрузить роли пользователя', 'error');
+        toast(t('adminUsers.rolesLoadError'), 'error');
         return;
       } finally {
         setIsLoading(false);
       }
     }
+
     setIsOpen((prev) => !prev);
   };
 
@@ -105,90 +81,74 @@ function UserRolesPanel({ userId, allRoles }: UserRolesPanelProps) {
     try {
       await usersService.updateUserRoles(userId, { roles: selectedRoles });
       setCurrentRoles(selectedRoles);
-      toast('Роли пользователя обновлены', 'success');
+      toast(t('adminUsers.rolesUpdated'), 'success');
     } catch (error) {
-      toast(error instanceof ApiError ? error.message : 'Не удалось обновить роли', 'error');
+      toast(error instanceof ApiError ? error.message : t('adminUsers.rolesUpdateError'), 'error');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleReset = () => {
-    setSelectedRoles(currentRoles);
-  };
-
   return (
     <div className="user-roles-panel">
-      <button
-        type="button"
-        className="user-roles-panel__toggle"
-        onClick={() => void handleToggle()}
-        aria-expanded={isOpen}
-      >
-        <span className="user-roles-panel__toggle-label">
-          {isOpen ? 'Скрыть роли' : 'Управление ролями'}
-        </span>
+      <button type="button" className="user-roles-panel__toggle" onClick={() => void handleToggle()} aria-expanded={isOpen}>
+        <span className="user-roles-panel__toggle-label">{isOpen ? t('adminUsers.hideRoles') : t('adminUsers.manageRoles')}</span>
         <span className="user-roles-panel__toggle-badges">
-          {loadedRef.current && currentRoles.map((role) => (
-            <Badge key={role} tone={ROLE_TONES[role] ?? 'neutral'}>
-              {ROLE_LABELS[role] ?? role}
-            </Badge>
-          ))}
+          {loadedRef.current &&
+            currentRoles.map((role) => (
+              <Badge key={role} tone={ROLE_TONES[role] ?? 'neutral'}>
+                {getUserRoleLabel(role as never)}
+              </Badge>
+            ))}
         </span>
-        <span
-          className={`user-roles-panel__chevron${isOpen ? ' user-roles-panel__chevron--open' : ''}`}
-          aria-hidden="true"
-        >
-          ▾
+        <span className={`user-roles-panel__chevron${isOpen ? ' user-roles-panel__chevron--open' : ''}`} aria-hidden="true">
+          {'>'}
         </span>
       </button>
 
-      {isOpen && (
+      {isOpen ? (
         <div className="user-roles-panel__body">
           {isLoading ? (
-            <p className="user-roles-panel__loading">Загрузка ролей…</p>
+            <p className="user-roles-panel__loading">{t('adminUsers.rolesLoading')}</p>
           ) : (
             <>
               <div className="user-roles-panel__checkboxes">
                 {allRoles.length === 0 ? (
-                  <p className="user-roles-panel__loading">Роли не найдены</p>
+                  <p className="user-roles-panel__loading">{t('adminUsers.rolesNotFound')}</p>
                 ) : (
                   allRoles.map((role) => (
                     <label key={role} className="user-roles-panel__checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedRoles.includes(role)}
-                        onChange={(e) => handleCheckbox(role, e.target.checked)}
-                      />
-                      <span className="user-roles-panel__role-name">{ROLE_LABELS[role] ?? role}</span>
-                      <Badge tone={ROLE_TONES[role] ?? 'neutral'}>{ROLE_LABELS[role] ?? role}</Badge>
+                      <input type="checkbox" checked={selectedRoles.includes(role)} onChange={(event) => handleCheckbox(role, event.target.checked)} />
+                      <span className="user-roles-panel__role-name">{getUserRoleLabel(role as never)}</span>
+                      <Badge tone={ROLE_TONES[role] ?? 'neutral'}>{getUserRoleLabel(role as never)}</Badge>
                     </label>
                   ))
                 )}
               </div>
 
-              {hasChanges && (
+              {hasChanges ? (
                 <div className="user-roles-panel__footer">
-                  <Button variant="secondary" onClick={handleReset} disabled={isSaving}>
-                    Отмена
+                  <Button variant="secondary" onClick={() => setSelectedRoles(currentRoles)} disabled={isSaving}>
+                    {t('common.cancel')}
                   </Button>
                   <Button variant="primary" onClick={() => void handleSave()} disabled={isSaving}>
-                    {isSaving ? 'Сохранение…' : 'Сохранить роли'}
+                    {isSaving ? t('adminUsers.saving') : t('adminUsers.saveRoles')}
                   </Button>
                 </div>
-              )}
+              ) : null}
             </>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
 
-// ── Main page component ────────────────────────────────────────────────────────
 export function AdminUsersPage() {
   const selectOptions = useUiSelectOptions();
   const currentUser = useAppSelector((state) => state.auth.user);
+  const { t, i18n } = useTranslation();
+  const toast = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -203,25 +163,45 @@ export function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [allRoles, setAllRoles] = useState<string[]>([]);
-  const toast = useToast();
+
+  const fallbackSortOptions = useMemo(
+    () => [
+      { value: 'name', label: t('adminUsers.nameField') },
+      { value: 'userName', label: t('adminUsers.fullNameField') },
+      { value: 'email', label: t('adminUsers.emailField') },
+      { value: 'age', label: t('adminUsers.ageField') },
+      { value: 'registrationDate', label: t('adminUsers.registrationField') },
+      { value: 'id', label: 'ID' }
+    ],
+    [t]
+  );
+
+  const fallbackDirectionOptions = useMemo(
+    () => [
+      { value: 'asc', label: t('adminUsers.asc') },
+      { value: 'desc', label: t('adminUsers.desc') }
+    ],
+    [t]
+  );
+
+  const fallbackPageSizeOptions = [
+    { value: '6', label: '6' },
+    { value: '12', label: '12' },
+    { value: '24', label: '24' },
+    { value: '48', label: '48' }
+  ];
 
   const sortOptions = useMemo(
     () => (selectOptions?.adminUserSortKeys ?? fallbackSortOptions).filter((option) => option.value !== 'emailConfirmed'),
-    [selectOptions]
+    [fallbackSortOptions, selectOptions]
   );
 
   useEffect(() => {
-    document.title = 'Управление пользователями - Система управления встречами';
-  }, []);
+    document.title = `${t('adminUsers.pageTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
-  // Load all available roles once on mount
   useEffect(() => {
-    usersService
-      .getRoles()
-      .then((data) => setAllRoles(data.roles))
-      .catch(() => {
-        // Non-critical — roles panel will show empty state
-      });
+    usersService.getRoles().then((data) => setAllRoles(data.roles)).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -236,26 +216,16 @@ export function AdminUsersPage() {
         setPage(response.page);
         setPageSize(response.pageSize);
       })
-      .catch(() => setError('Не удалось получить список пользователей с сервера.'))
+      .catch(() => setError(t('adminUsers.loadUsersError')))
       .finally(() => setIsLoading(false));
-  }, [page, pageSize]);
+  }, [page, pageSize, t]);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
-
     const usersExceptCurrent = users.filter((user) => user.id !== currentUser?.id);
-
     const searchedUsers = query
       ? usersExceptCurrent.filter((user) =>
-          [
-            getDisplayName(user.name, user.userName, user.email),
-            user.name,
-            user.userName,
-            user.email,
-            user.age,
-            user.registrationDate ? formatDate(user.registrationDate) : null,
-            user.id
-          ]
+          [getDisplayName(user.name, user.userName, user.email), user.name, user.userName, user.email, user.age, user.registrationDate ? formatDate(user.registrationDate) : null, user.id]
             .map((value) => normalizeValue(value))
             .some((value) => value.includes(query))
         )
@@ -274,18 +244,12 @@ export function AdminUsersPage() {
         return (leftDate - rightDate) * direction;
       }
 
-      const leftValue =
-        sortKey === 'name'
-          ? getDisplayName(left.name, left.userName, left.email)
-          : normalizeValue(left[sortKey]);
-      const rightValue =
-        sortKey === 'name'
-          ? getDisplayName(right.name, right.userName, right.email)
-          : normalizeValue(right[sortKey]);
+      const leftValue = sortKey === 'name' ? getDisplayName(left.name, left.userName, left.email) : normalizeValue(left[sortKey]);
+      const rightValue = sortKey === 'name' ? getDisplayName(right.name, right.userName, right.email) : normalizeValue(right[sortKey]);
 
-      return leftValue.localeCompare(rightValue, 'ru') * direction;
+      return leftValue.localeCompare(rightValue, i18n.resolvedLanguage === 'kk' ? 'kk' : 'ru') * direction;
     });
-  }, [search, sortDirection, sortKey, users, currentUser?.id]);
+  }, [currentUser?.id, i18n.resolvedLanguage, search, sortDirection, sortKey, users]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -300,7 +264,7 @@ export function AdminUsersPage() {
       setPage(response.page);
       setPageSize(response.pageSize);
     } catch {
-      setError('Не удалось получить список пользователей с сервера.');
+      setError(t('adminUsers.loadUsersError'));
     } finally {
       setIsLoading(false);
     }
@@ -310,7 +274,7 @@ export function AdminUsersPage() {
     const newPassword = resetPasswords[userId]?.trim();
 
     if (!newPassword) {
-      toast('Введите новый пароль для сброса', 'error');
+      toast(t('adminUsers.enterPassword'), 'error');
       return;
     }
 
@@ -319,16 +283,12 @@ export function AdminUsersPage() {
     try {
       await authService.resetPassword({ userId, newPassword });
       setResetPasswords((current) => ({ ...current, [userId]: '' }));
-      toast('Пароль пользователя сброшен', 'success');
+      toast(t('adminUsers.passwordReset'), 'success');
     } catch (error) {
-      toast(error instanceof ApiError ? error.message : 'Не удалось сбросить пароль пользователя', 'error');
+      toast(error instanceof ApiError ? error.message : t('adminUsers.passwordResetError'), 'error');
     } finally {
       setActiveResetUserId(null);
     }
-  };
-
-  const requestDeleteUser = (user: AdminUser) => {
-    setPendingDeleteUser(user);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -337,55 +297,42 @@ export function AdminUsersPage() {
     try {
       await usersService.deleteUser(userId);
       setPendingDeleteUser(null);
-      toast('Аккаунт пользователя удалён', 'success');
+      toast(t('adminUsers.accountDeleted'), 'success');
 
       const nextTotal = Math.max(0, total - 1);
       const nextTotalPages = Math.max(1, Math.ceil(nextTotal / pageSize));
       const nextPage = Math.min(page, nextTotalPages);
       await reloadUsers(nextPage, pageSize);
     } catch (error) {
-      toast(error instanceof ApiError ? error.message : 'Не удалось удалить аккаунт пользователя', 'error');
+      toast(error instanceof ApiError ? error.message : t('adminUsers.accountDeleteError'), 'error');
     } finally {
       setActiveDeleteUserId(null);
     }
   };
 
   return (
-    <PageSection title="Пользователи" subtitle="Список пользователей для роли администратор">
+    <PageSection title={t('adminUsers.title')} subtitle={t('adminUsers.subtitle')}>
       <div className="admin-users-hero">
         <div>
-          <span className="admin-users-hero__eyebrow">Рабочее пространство с серверными данными</span>
-          <h2>Поиск, сортировка и постраничный обзор пользователей</h2>
-          <p>
-            Список использует серверные `page/limit/total`, а поиск и сортировка остаются удобной клиентской надстройкой
-            над текущей страницей.
-          </p>
+          <span className="admin-users-hero__eyebrow">{t('adminUsers.eyebrow')}</span>
+          <h2>{t('adminUsers.heading')}</h2>
+          <p>{t('adminUsers.description')}</p>
         </div>
         <div className="admin-users-hero__meta">
           <strong>{total}</strong>
-          <span>всего пользователей в системе</span>
+          <span>{t('adminUsers.totalUsers')}</span>
         </div>
       </div>
 
       <div className="admin-users-toolbar">
         <div className="admin-users-toolbar__search">
-          <Input
-            label="Поиск"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Имя, email, ФИО, возраст, дата, id"
-          />
+          <Input label={t('adminUsers.search')} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('adminUsers.searchPlaceholder')} />
         </div>
         <div className="admin-users-toolbar__sort">
-          <Select label="Сортировать по" value={sortKey} onChange={(value) => setSortKey(value as SortKey)} options={sortOptions} />
+          <Select label={t('adminUsers.sortBy')} value={sortKey} onChange={(value) => setSortKey(value as SortKey)} options={sortOptions} />
+          <Select label={t('adminUsers.direction')} value={sortDirection} onChange={(value) => setSortDirection(value as SortDirection)} options={selectOptions?.sortDirections ?? fallbackDirectionOptions} />
           <Select
-            label="Направление"
-            value={sortDirection}
-            onChange={(value) => setSortDirection(value as SortDirection)}
-            options={selectOptions?.sortDirections ?? fallbackDirectionOptions}
-          />
-          <Select
-            label="Пользователей на странице"
+            label={t('adminUsers.pageSize')}
             value={String(pageSize)}
             onChange={(value) => {
               setPage(1);
@@ -396,16 +343,12 @@ export function AdminUsersPage() {
         </div>
       </div>
 
-      {error ? <EmptyState title="Не удалось загрузить пользователей" description={error} /> : null}
-      {!error && !isLoading && filteredUsers.length === 0 ? (
-        <EmptyState title="Совпадений не найдено" description="Попробуйте изменить строку поиска или порядок сортировки." />
-      ) : null}
+      {error ? <EmptyState title={t('adminUsers.loadUsersTitle')} description={error} /> : null}
+      {!error && !isLoading && filteredUsers.length === 0 ? <EmptyState title={t('adminUsers.noMatchesTitle')} description={t('adminUsers.noMatchesDescription')} /> : null}
 
       <div className="admin-users-page-meta">
-        <span>
-          Страница {page} из {totalPages}
-        </span>
-        <span>На текущей странице: {filteredUsers.length}</span>
+        <span>{t('adminUsers.pageOf', { page, total: totalPages })}</span>
+        <span>{t('adminUsers.onCurrentPage', { count: filteredUsers.length })}</span>
       </div>
 
       <div className="admin-users-grid">
@@ -417,22 +360,22 @@ export function AdminUsersPage() {
               </div>
               <div>
                 <h3>{getDisplayName(user.name, user.userName, user.email)}</h3>
-                <p>{user.email ?? 'Эл. почта не указана'}</p>
+                <p>{user.email ?? t('common.emailNotSpecified')}</p>
               </div>
             </div>
 
             <div className="admin-user-card__facts">
               <div>
-                <span>ФИО</span>
-                <strong>{user.userName ?? 'Не указано'}</strong>
+                <span>{t('adminUsers.fullNameField')}</span>
+                <strong>{user.userName ?? t('common.notSpecifiedNeutral')}</strong>
               </div>
               <div>
-                <span>Возраст</span>
-                <strong>{user.age ?? 'Не указан'}</strong>
+                <span>{t('adminUsers.ageField')}</span>
+                <strong>{user.age ?? t('common.notSpecifiedNeutral')}</strong>
               </div>
               <div>
-                <span>Регистрация</span>
-                <strong>{user.registrationDate ? formatDate(user.registrationDate) : 'Неизвестно'}</strong>
+                <span>{t('adminUsers.registrationField')}</span>
+                <strong>{user.registrationDate ? formatDate(user.registrationDate) : t('common.unknown')}</strong>
               </div>
               <div>
                 <span>ID</span>
@@ -440,33 +383,22 @@ export function AdminUsersPage() {
               </div>
             </div>
 
-            {/* Roles management */}
             <UserRolesPanel userId={user.id} allRoles={allRoles} />
 
             <div className="admin-user-card__actions">
               <Input
-                label="Новый пароль"
+                label={t('adminUsers.resetPasswordLabel')}
                 type="password"
                 value={resetPasswords[user.id] ?? ''}
-                onChange={(event) =>
-                  setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))
-                }
-                placeholder="Введите пароль для сброса"
+                onChange={(event) => setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))}
+                placeholder={t('adminUsers.resetPasswordPlaceholder')}
               />
               <div className="admin-user-card__buttons">
-                <Button
-                  variant="secondary"
-                  onClick={() => void handleResetPassword(user.id)}
-                  disabled={activeResetUserId === user.id}
-                >
-                  Сбросить пароль
+                <Button variant="secondary" onClick={() => void handleResetPassword(user.id)} disabled={activeResetUserId === user.id}>
+                  {t('adminUsers.resetPasswordButton')}
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => requestDeleteUser(user)}
-                  disabled={activeDeleteUserId === user.id}
-                >
-                  Удалить аккаунт
+                <Button variant="danger" onClick={() => setPendingDeleteUser(user)} disabled={activeDeleteUserId === user.id}>
+                  {t('adminUsers.deleteAccountButton')}
                 </Button>
               </div>
             </div>
@@ -476,33 +408,27 @@ export function AdminUsersPage() {
 
       {!error ? (
         <div className="admin-users-pagination">
-          <Button
-            variant="secondary"
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={page <= 1 || isLoading}
-          >
-            Назад
+          <Button variant="secondary" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1 || isLoading}>
+            {t('adminUsers.previous')}
           </Button>
           <div className="admin-users-pagination__status">
             <strong>{page}</strong>
-            <span>из {totalPages}</span>
+            <span>{t('adminUsers.of', { total: totalPages })}</span>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-            disabled={page >= totalPages || isLoading}
-          >
-            Вперёд
+          <Button variant="secondary" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages || isLoading}>
+            {t('adminUsers.next')}
           </Button>
         </div>
       ) : null}
 
       <ConfirmDialog
         isOpen={pendingDeleteUser !== null}
-        title="Удалить аккаунт?"
-        description={`Аккаунт пользователя «${getDisplayName(pendingDeleteUser?.name ?? null, pendingDeleteUser?.userName ?? null, pendingDeleteUser?.email ?? null)}» будет безвозвратно удалён. Это действие нельзя отменить.`}
-        confirmLabel="Удалить"
-        cancelLabel="Отмена"
+        title={t('adminUsers.deleteAccountTitle')}
+        description={t('adminUsers.deleteAccountDescription', {
+          name: getDisplayName(pendingDeleteUser?.name ?? null, pendingDeleteUser?.userName ?? null, pendingDeleteUser?.email ?? null)
+        })}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         isConfirming={activeDeleteUserId !== null}
         onConfirm={() => pendingDeleteUser && void handleDeleteUser(pendingDeleteUser.id)}
         onCancel={() => setPendingDeleteUser(null)}

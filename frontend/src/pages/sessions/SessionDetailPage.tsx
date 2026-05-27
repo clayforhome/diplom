@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MeetingForm } from '../../components/meetings/MeetingForm/MeetingForm';
 import { ParticipantsPanel } from '../../components/meetings/ParticipantsPanel/ParticipantsPanel';
+import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Badge } from '../../components/ui/Badge/Badge';
 import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog/ConfirmDialog';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
-import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Spinner } from '../../components/ui/Spinner/Spinner';
 import { ApiError } from '../../http/httpClient';
 import { sessionsService } from '../../http/sessionsService';
@@ -24,8 +25,7 @@ function getDisplayFileName(fileName: string): string {
 
   if (underscoreIndex > 0) {
     const prefix = trimmed.slice(0, underscoreIndex);
-
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(prefix)) {
+    if (/^[0-9a-f-]{36}$/i.test(prefix)) {
       return trimmed.slice(underscoreIndex + 1);
     }
   }
@@ -47,29 +47,20 @@ function getFormValues(meeting?: {
 }): MeetingFormValues {
   function toLocalDateString(iso: string): string {
     const d = new Date(iso);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   function toLocalTimeString(iso: string): string {
     const d = new Date(iso);
-    const h = String(d.getHours()).padStart(2, '0');
-    const min = String(d.getMinutes()).padStart(2, '0');
-    return `${h}:${min}`;
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
-
-  const date = meeting?.date ? toLocalDateString(meeting.date) : '';
-  const startTime = meeting?.startTime ? toLocalTimeString(meeting.startTime) : '';
-  const endTime = meeting?.endTime ? toLocalTimeString(meeting.endTime) : '';
 
   return {
     title: meeting?.title ?? '',
     description: meeting?.description ?? '',
-    date,
-    startTime,
-    endTime,
+    date: meeting?.date ? toLocalDateString(meeting.date) : '',
+    startTime: meeting?.startTime ? toLocalTimeString(meeting.startTime) : '',
+    endTime: meeting?.endTime ? toLocalTimeString(meeting.endTime) : '',
     format: meeting?.format ?? 'Offline',
     status: meeting?.status,
     location: meeting?.location ?? '',
@@ -79,26 +70,12 @@ function getFormValues(meeting?: {
   };
 }
 
-
-function getFileMeta(file: MeetingFileItem): string {
-  const parts = [formatDate(file.uploadedAt)];
-
-  if (file.uploaderName?.trim()) {
-    parts.push(file.uploaderName);
-  }
-
-  if (file.fileType.trim()) {
-    parts.push(file.fileType);
-  }
-
-  return parts.join(' • ');
-}
-
 export function SessionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const toast = useToast();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [meetingFiles, setMeetingFiles] = useState<MeetingFileItem[]>([]);
   const [isFilesLoading, setIsFilesLoading] = useState(false);
@@ -116,31 +93,27 @@ export function SessionDetailPage() {
 
   async function loadMeetingFiles(meetingId: string) {
     setIsFilesLoading(true);
-
     try {
       const files = await sessionsService.listMeetingFiles(meetingId);
       setMeetingFiles(files);
     } catch {
       setMeetingFiles([]);
-      toast('Не удалось загрузить файлы встречи', 'error');
+      toast(t('sessionDetail.filesLoadError'), 'error');
     } finally {
       setIsFilesLoading(false);
     }
   }
 
   useEffect(() => {
-    if (!id) {
-      return;
-    }
-
+    if (!id) return;
     void dispatch(fetchMeetingThunk(id));
     void dispatch(fetchParticipantsThunk(id));
     void loadMeetingFiles(id);
   }, [dispatch, id]);
 
   useEffect(() => {
-    document.title = meeting ? `${meeting.title} - Система управления встречами` : 'Встреча - Система управления встречами';
-  }, [meeting]);
+    document.title = `${meeting?.title ?? t('sessionDetail.pageTitle')} - ${t('common.appName')}`;
+  }, [meeting?.title, t, i18n.resolvedLanguage]);
 
   if (!id || !meeting) {
     return <Spinner />;
@@ -159,33 +132,33 @@ export function SessionDetailPage() {
               <div className="detail-grid__stats">
                 <div className="detail-grid__stat">
                   <strong>{meeting.participantCount}</strong>
-                  <span>участников</span>
+                  <span>{t('sessionDetail.participantsCount')}</span>
                 </div>
                 <div className="detail-grid__stat">
                   <strong>{meeting.fileCount}</strong>
-                  <span>файлов</span>
+                  <span>{t('sessionDetail.filesCount')}</span>
                 </div>
               </div>
             </div>
             <div className="detail-grid__description-card">
-              <span className="detail-grid__label">Описание</span>
-              <p>{meeting.description || 'Описание встречи пока не заполнено.'}</p>
+              <span className="detail-grid__label">{t('sessionDetail.description')}</span>
+              <p>{meeting.description || t('sessionDetail.descriptionFallback')}</p>
             </div>
             <div className="detail-grid__facts">
               <div className="detail-grid__fact">
-                <span className="detail-grid__label">Локация</span>
-                <strong>{meeting.location || 'Не указана'}</strong>
+                <span className="detail-grid__label">{t('sessionDetail.location')}</span>
+                <strong>{meeting.location || t('common.notSpecified')}</strong>
               </div>
               <div className="detail-grid__fact">
-                <span className="detail-grid__label">Ссылка на встречу</span>
-                <strong>{meeting.meetingLink || 'Не указана'}</strong>
+                <span className="detail-grid__label">{t('sessionDetail.meetingLink')}</span>
+                <strong>{meeting.meetingLink || t('common.notSpecified')}</strong>
               </div>
               <div className="detail-grid__fact">
-                <span className="detail-grid__label">Контактная информация</span>
-                <strong>{meeting.contactInfo || 'Не указана'}</strong>
+                <span className="detail-grid__label">{t('sessionDetail.contactInfo')}</span>
+                <strong>{meeting.contactInfo || t('common.notSpecified')}</strong>
               </div>
               <div className="detail-grid__fact">
-                <span className="detail-grid__label">Дата и время</span>
+                <span className="detail-grid__label">{t('sessionDetail.dateTime')}</span>
                 <strong>{`${formatDate(meeting.date)} • ${formatDateTimeRange(meeting.startTime, meeting.endTime)}`}</strong>
               </div>
             </div>
@@ -195,8 +168,8 @@ export function SessionDetailPage() {
           <div className="meeting-files">
             <div className="meeting-files__header">
               <div>
-                <span className="detail-grid__label">Файлы встречи</span>
-                <h3 className="meeting-files__title">Материалы и вложения</h3>
+                <span className="detail-grid__label">{t('sessionDetail.filesLabel')}</span>
+                <h3 className="meeting-files__title">{t('sessionDetail.filesTitle')}</h3>
               </div>
               {canManage ? (
                 <>
@@ -207,20 +180,15 @@ export function SessionDetailPage() {
                     accept=".pdf,.docx,.pptx,.xlsx,.jpg,.jpeg,.png"
                     onChange={async (event) => {
                       const file = event.target.files?.[0];
-
-                      if (!file) {
-                        return;
-                      }
+                      if (!file) return;
 
                       setIsUploadingFile(true);
-
                       try {
                         await sessionsService.uploadMeetingFile(id, file);
-                        toast('Файл загружен', 'success');
+                        toast(t('sessionDetail.fileUploaded'), 'success');
                         await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
                       } catch (error) {
-                        const message = error instanceof ApiError ? error.message : 'Не удалось загрузить файл';
-                        toast(message, 'error');
+                        toast(error instanceof ApiError ? error.message : t('sessionDetail.fileUploadError'), 'error');
                       } finally {
                         setIsUploadingFile(false);
                         event.target.value = '';
@@ -228,17 +196,14 @@ export function SessionDetailPage() {
                     }}
                   />
                   <Button type="button" variant="secondary" disabled={isUploadingFile} onClick={() => fileInputRef.current?.click()}>
-                    {isUploadingFile ? 'Загрузка...' : 'Загрузить файл'}
+                    {isUploadingFile ? t('common.loading') : t('sessionDetail.fileUploadButton')}
                   </Button>
                 </>
               ) : null}
             </div>
 
             {isFilesLoading ? <Spinner /> : null}
-
-            {!isFilesLoading && meetingFiles.length === 0 ? (
-              <EmptyState title="Файлы пока не добавлены" description="Когда организатор или администратор загрузит материалы, они появятся здесь." />
-            ) : null}
+            {!isFilesLoading && meetingFiles.length === 0 ? <EmptyState title={t('sessionDetail.filesEmptyTitle')} description={t('sessionDetail.filesEmptyDescription')} /> : null}
 
             {!isFilesLoading && meetingFiles.length > 0 ? (
               <div className="meeting-files__list">
@@ -246,23 +211,14 @@ export function SessionDetailPage() {
                   <div key={file.id} className="meeting-files__item">
                     <div className="meeting-files__item-copy">
                       <strong title={getDisplayFileName(file.fileName)}>{getDisplayFileName(file.fileName)}</strong>
-                      {/*<span>{getFileMeta(file)}</span>*/}
                     </div>
                     <div className="meeting-files__actions">
-                      <a
-                        className="button button--secondary"
-                        href={sessionsService.getMeetingFileDownloadUrl(id, file.id)}
-                        download={getDisplayFileName(file.fileName)}
-                      >
-                        Скачать
+                      <a className="button button--secondary" href={sessionsService.getMeetingFileDownloadUrl(id, file.id)} download={getDisplayFileName(file.fileName)}>
+                        {t('common.download')}
                       </a>
                       {canManage ? (
-                        <Button
-                          type="button"
-                          variant="danger"
-                          onClick={() => setFileToRemove({ id: file.id, name: getDisplayFileName(file.fileName) })}
-                        >
-                          Удалить
+                        <Button type="button" variant="danger" onClick={() => setFileToRemove({ id: file.id, name: getDisplayFileName(file.fileName) })}>
+                          {t('common.delete')}
                         </Button>
                       ) : null}
                     </div>
@@ -272,17 +228,14 @@ export function SessionDetailPage() {
             ) : null}
           </div>
         </Card>
+
         {canManage ? (
           <MeetingForm
             initialValues={formValues}
             isEditing
             footerActions={
-              <Button
-                type="button"
-                variant="danger"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                Удалить встречу
+              <Button type="button" variant="danger" onClick={() => setShowDeleteConfirm(true)}>
+                {t('sessionDetail.deleteMeeting')}
               </Button>
             }
             onSubmit={async (values) => {
@@ -298,42 +251,40 @@ export function SessionDetailPage() {
                 meetingLink: values.meetingLink,
                 contactInfo: values.contactInfo
               });
-              toast('Встреча обновлена', 'success');
+              toast(t('sessionDetail.meetingUpdated'), 'success');
               await dispatch(fetchMeetingThunk(id)).unwrap();
             }}
           />
         ) : null}
+
         <ParticipantsPanel
           participants={participants}
           canRespond={meeting.status !== 'Confirmed' && meeting.status !== 'Completed' && meeting.status !== 'Cancelled'}
           currentUserId={auth.user?.id}
           onRespond={async (status, comment) => {
-            if (!auth.user?.id) {
-              return;
-            }
-
+            if (!auth.user?.id) return;
             await sessionsService.respondToInvitation(id, auth.user.id, { status, comment });
-            toast('Ответ на приглашение сохранён', 'success');
+            toast(t('sessionDetail.responseSaved'), 'success');
             await dispatch(fetchParticipantsThunk(id)).unwrap();
           }}
           onInvite={
             canManage
               ? async (participantIds) => {
-                await sessionsService.inviteParticipants(id, { participantIds });
-                toast('Участники приглашены', 'success');
-                await dispatch(fetchParticipantsThunk(id)).unwrap();
-                await dispatch(fetchMeetingThunk(id)).unwrap();
-              }
+                  await sessionsService.inviteParticipants(id, { participantIds });
+                  toast(t('sessionDetail.participantsInvited'), 'success');
+                  await dispatch(fetchParticipantsThunk(id)).unwrap();
+                  await dispatch(fetchMeetingThunk(id)).unwrap();
+                }
               : undefined
           }
           onRemove={
             canManage
               ? async (userId) => {
-                await sessionsService.removeParticipant(id, userId);
-                toast('Участник удалён', 'success');
-                await dispatch(fetchParticipantsThunk(id)).unwrap();
-                await dispatch(fetchMeetingThunk(id)).unwrap();
-              }
+                  await sessionsService.removeParticipant(id, userId);
+                  toast(t('sessionDetail.participantRemoved'), 'success');
+                  await dispatch(fetchParticipantsThunk(id)).unwrap();
+                  await dispatch(fetchMeetingThunk(id)).unwrap();
+                }
               : undefined
           }
         />
@@ -341,21 +292,20 @@ export function SessionDetailPage() {
 
       <ConfirmDialog
         isOpen={showDeleteConfirm}
-        title="Удаление встречи"
-        description={`Вы уверены, что хотите удалить встречу «${meeting.title}»? Это действие нельзя отменить.`}
-        confirmLabel="Удалить"
-        cancelLabel="Отмена"
+        title={t('sessionDetail.deleteMeetingTitle')}
+        description={t('sessionDetail.deleteMeetingDescription', { title: meeting.title })}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         isConfirming={isDeleting}
         onConfirm={async () => {
           setIsDeleting(true);
           try {
             await sessionsService.deleteMeeting(id);
-            toast('Встреча удалена', 'success');
+            toast(t('sessionDetail.meetingDeleted'), 'success');
             setShowDeleteConfirm(false);
             navigate('/sessions');
           } catch (error) {
-            const message = error instanceof ApiError ? error.message : 'Не удалось удалить встречу';
-            toast(message, 'error');
+            toast(error instanceof ApiError ? error.message : t('sessionDetail.meetingDeleteError'), 'error');
           } finally {
             setIsDeleting(false);
           }
@@ -365,22 +315,21 @@ export function SessionDetailPage() {
 
       <ConfirmDialog
         isOpen={Boolean(fileToRemove)}
-        title="Удаление файла"
-        description={`Вы уверены, что хотите удалить файл «${fileToRemove?.name}»?`}
-        confirmLabel="Удалить"
-        cancelLabel="Отмена"
+        title={t('sessionDetail.deleteFileTitle')}
+        description={t('sessionDetail.deleteFileDescription', { name: fileToRemove?.name ?? '' })}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         isConfirming={isFileRemoving}
         onConfirm={async () => {
           if (!fileToRemove) return;
           setIsFileRemoving(true);
           try {
             await sessionsService.deleteMeetingFile(id, fileToRemove.id);
-            toast('Файл удалён', 'success');
+            toast(t('sessionDetail.fileDeleted'), 'success');
             setFileToRemove(null);
             await Promise.all([loadMeetingFiles(id), dispatch(fetchMeetingThunk(id)).unwrap()]);
           } catch (error) {
-            const message = error instanceof ApiError ? error.message : 'Не удалось удалить файл';
-            toast(message, 'error');
+            toast(error instanceof ApiError ? error.message : t('sessionDetail.fileDeleteError'), 'error');
           } finally {
             setIsFileRemoving(false);
           }

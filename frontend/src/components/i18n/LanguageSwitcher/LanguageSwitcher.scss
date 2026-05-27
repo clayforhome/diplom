@@ -1,0 +1,144 @@
+@use '../../../styles/variables.scss' as *;
+
+.language-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  border: 1px solid rgba(0, 113, 227, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.language-switcher__indicator {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.25rem;
+  z-index: 0;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 245, 255, 0.9)),
+    rgba(0, 113, 227, 0.12);
+  box-shadow:
+    0 10px 24px rgba(0, 113, 227, 0.14),
+    inset 0 0 0 1px rgba(0, 113, 227, 0.08);
+  transition:
+    transform 0.56s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.56s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.42s ease;
+}
+
+.language-switcher--animating {
+  border-color: rgba(0, 113, 227, 0.18);
+  box-shadow: 0 12px 30px rgba(0, 113, 227, 0.12);
+  transform: translateY(-1px);
+}
+
+.language-switcher__button {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 0.82rem;
+  background: transparent;
+  color: $text-secondary;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.32s ease;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.language-switcher__button--active {
+  color: $text-primary;
+}
+
+.language-switcher__text-wrap {
+  position: relative;
+  display: block;
+  height: 1.2em;
+  overflow: hidden;
+}
+
+.language-switcher__text {
+  display: block;
+  line-height: 1.2;
+  transition:
+    transform 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.38s ease;
+}
+
+.language-switcher__text--secondary {
+  position: absolute;
+  inset: 0;
+  transform: translateY(120%);
+  opacity: 0;
+}
+
+.language-switcher__button:hover .language-switcher__text--primary {
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+.language-switcher__button:hover .language-switcher__text--secondary {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.language-switcher__button--active .language-switcher__text--primary,
+.language-switcher__button--active .language-switcher__text--secondary {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.language-switcher__button--active:hover .language-switcher__text--primary {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.language-switcher__button--active:hover .language-switcher__text--secondary {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.language-switcher__button--active .language-switcher__text-wrap {
+  overflow: visible;
+}
+
+.language-switcher__button--active .language-switcher__text--secondary {
+  display: none;
+}
+
+.language-switcher--animating .language-switcher__button:not(.language-switcher__button--active) {
+  opacity: 0.76;
+}
+
+.language-switcher__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

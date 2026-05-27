@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MeetingCard } from '../../components/meetings/MeetingCard/MeetingCard';
 import { MeetingForm } from '../../components/meetings/MeetingForm/MeetingForm';
+import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { EmptyState } from '../../components/ui/EmptyState/EmptyState';
 import { Input } from '../../components/ui/Input/Input';
-import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Select } from '../../components/ui/Select/Select';
+import { sessionsService } from '../../http/sessionsService';
+import { useToast } from '../../hooks/useToast';
 import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { checkAvailabilityThunk, clearAvailability, fetchMeetingsThunk } from '../../store/slices/sessionsSlice';
-import { sessionsService } from '../../http/sessionsService';
-import { useToast } from '../../hooks/useToast';
-import { toDateTimeString } from '../../utils/format';
 import type { MeetingFormValues, MeetingFormat, MeetingStatus } from '../../types';
+import { toDateTimeString } from '../../utils/format';
 
 const initialFormValues: MeetingFormValues = {
   title: '',
@@ -29,6 +30,7 @@ const initialFormValues: MeetingFormValues = {
 export function SessionsPage() {
   const dispatch = useAppDispatch();
   const toast = useToast();
+  const { t, i18n } = useTranslation();
   const { meetings, availability } = useAppSelector((state) => state.sessions);
   const { roles } = useAppSelector((state) => state.auth);
   const selectOptions = useUiSelectOptions();
@@ -39,8 +41,8 @@ export function SessionsPage() {
   const canManageMeetings = useMemo(() => roles.includes('Organizer') || roles.includes('Admin'), [roles]);
 
   useEffect(() => {
-    document.title = 'Расписание встреч - Система управления встречами';
-  }, []);
+    document.title = `${t('sessions.pageTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
   useEffect(() => {
     void dispatch(fetchMeetingsThunk({ page: 1, limit: 12, status: status === 'All' ? undefined : status }));
@@ -67,7 +69,7 @@ export function SessionsPage() {
   }, [format, meetings, search]);
 
   return (
-    <PageSection title="Встречи" subtitle="Список ваших встреч и операций с ними">
+    <PageSection title={t('sessions.title')} subtitle={t('sessions.subtitle')}>
       {canManageMeetings ? (
         <MeetingForm
           initialValues={initialFormValues}
@@ -84,7 +86,7 @@ export function SessionsPage() {
               contactInfo: values.contactInfo || undefined,
               participantIds: values.participantIds
             });
-            toast('Встреча создана', 'success');
+            toast(t('sessions.created'), 'success');
             await dispatch(fetchMeetingsThunk({ page: 1, limit: 12, status: status === 'All' ? undefined : status })).unwrap();
           }}
           onCheckAvailability={async (values) => {
@@ -103,7 +105,7 @@ export function SessionsPage() {
 
       {availability ? (
         <div className="availability-box">
-          <strong>{availability.allAvailable ? 'Все участники свободны' : 'Найдены конфликты'}</strong>
+          <strong>{availability.allAvailable ? t('sessions.allAvailable') : t('sessions.conflictsFound')}</strong>
           {!availability.allAvailable
             ? availability.conflicts.map((conflict) => (
                 <p key={`${conflict.userId}-${conflict.conflictingMeetingId}`}>
@@ -115,32 +117,26 @@ export function SessionsPage() {
       ) : null}
 
       <div className="sessions-page__meetings-header">
-        <h2 className="sessions-page__meetings-title">Все встречи</h2>
+        <h2 className="sessions-page__meetings-title">{t('sessions.allMeetings')}</h2>
         <div className="sessions-page__controls">
           <div className="sessions-page__search">
-            <Input label="Поиск по встречам" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Название, описание, статус, формат..." />
+            <Input label={t('sessions.searchLabel')} value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('sessions.searchPlaceholder')} />
           </div>
           <div className="sessions-page__filters">
             <div className="sessions-page__filter">
               <Select
-                label="Фильтр по статусу"
+                label={t('sessions.statusFilter')}
                 value={status}
                 onChange={(value) => setStatus(value as MeetingStatus | 'All')}
-                options={[
-                  { value: 'All', label: 'Все статусы' },
-                  ...(selectOptions?.meetingStatuses ?? [])
-                ]}
+                options={[{ value: 'All', label: t('common.allStatuses') }, ...(selectOptions?.meetingStatuses ?? [])]}
               />
             </div>
             <div className="sessions-page__filter">
               <Select
-                label="Фильтр по формату"
+                label={t('sessions.formatFilter')}
                 value={format}
                 onChange={(value) => setFormat(value as MeetingFormat | 'All')}
-                options={[
-                  { value: 'All', label: 'Все форматы' },
-                  ...(selectOptions?.meetingFormats ?? [])
-                ]}
+                options={[{ value: 'All', label: t('common.allFormats') }, ...(selectOptions?.meetingFormats ?? [])]}
               />
             </div>
           </div>
@@ -154,7 +150,7 @@ export function SessionsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState title="Встречи не найдены" description="Попробуйте изменить строку поиска, фильтры или создайте новую встречу." />
+        <EmptyState title={t('sessions.notFoundTitle')} description={t('sessions.notFoundDescription')} />
       )}
     </PageSection>
   );

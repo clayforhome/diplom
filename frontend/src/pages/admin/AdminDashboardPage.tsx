@@ -1,37 +1,40 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { PageSection } from '../../components/layout/PageSection/PageSection';
 
 export function AdminDashboardPage() {
+  const { t, i18n } = useTranslation();
+
   useEffect(() => {
-    document.title = 'Панель администратора - Система управления встречами';
-  }, []);
+    document.title = `${t('adminDashboard.pageTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
   return (
-    <PageSection title="Панель администратора">
+    <PageSection title={t('adminDashboard.title')}>
       <div className="admin-hero">
         <div>
-          <span className="admin-hero__eyebrow">Административное рабочее пространство</span>
-          <h2>Контроль доступа и обзор системных сценариев</h2>
-          <p>Панель собрана так, чтобы быстрее вести к нужным административным действиям и не распадаться на случайные одиночные карточки.</p>
+          <span className="admin-hero__eyebrow">{t('adminDashboard.eyebrow')}</span>
+          <h2>{t('adminDashboard.heading')}</h2>
+          <p>{t('adminDashboard.description')}</p>
         </div>
         <Link to="/admin/users" className="admin-hero__link">
-          Открыть пользователей
+          {t('adminDashboard.openUsers')}
         </Link>
       </div>
 
       <div className="admin-grid">
         <section className="admin-panel">
-          <h3>Что доступно сейчас</h3>
-          <p>В текущей серверной реализации стабильно работают просмотр списка пользователей, удаление аккаунтов и сброс паролей.</p>
+          <h3>{t('adminDashboard.availableNow')}</h3>
+          <p>{t('adminDashboard.availableNowDescription')}</p>
         </section>
         <section className="admin-panel">
-          <h3>Что ещё ограничено</h3>
-          <p>Изменение ролей и отдельное управление деактивацией аккаунтов пока не вынесены в самостоятельный интерфейс, потому что backend ещё не отдаёт для этого отдельные маршруты.</p>
+          <h3>{t('adminDashboard.limited')}</h3>
+          <p>{t('adminDashboard.limitedDescription')}</p>
         </section>
         <section className="admin-panel admin-panel--accent">
-          <h3>Рабочий маршрут</h3>
-          <p>Начинайте со списка пользователей, затем проверяйте учётные данные и уже после этого возвращайтесь к общему рабочему пространству для управления встречами.</p>
+          <h3>{t('adminDashboard.route')}</h3>
+          <p>{t('adminDashboard.routeDescription')}</p>
         </section>
       </div>
     </PageSection>
