@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Badge } from '../../ui/Badge/Badge';
-import { Button } from '../../ui/Button/Button';
-import { Card } from '../../ui/Card/Card';
-import { Textarea } from '../../ui/Textarea/Textarea';
+import { useTranslation } from 'react-i18next';
 import { sessionsService } from '../../../http/sessionsService';
 import type { InvitationStatus, OrganizerUser, Participant } from '../../../types';
 import { formatDate, formatTime } from '../../../utils/format';
 import { getInvitationStatusLabel } from '../../../utils/meetingLabels';
+import { Badge } from '../../ui/Badge/Badge';
+import { Button } from '../../ui/Button/Button';
+import { Card } from '../../ui/Card/Card';
 import { ConfirmDialog } from '../../ui/ConfirmDialog/ConfirmDialog';
+import { Textarea } from '../../ui/Textarea/Textarea';
 import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './ParticipantsPanel.scss';
 
@@ -26,18 +27,14 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
   const [inviteSelection, setInviteSelection] = useState<string[]>([]);
   const [participantToRemove, setParticipantToRemove] = useState<Participant | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
-    if (!onInvite) {
-      return;
-    }
+    if (!onInvite) return;
 
     let isMounted = true;
-
     void sessionsService.getOrganizerUsers().then((users) => {
-      if (isMounted) {
-        setOrganizerUsers(users);
-      }
+      if (isMounted) setOrganizerUsers(users);
     });
 
     return () => {
@@ -51,10 +48,7 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
   }, [organizerUsers, participants]);
 
   const handleInvite = async () => {
-    if (inviteSelection.length === 0 || !onInvite) {
-      return;
-    }
-
+    if (inviteSelection.length === 0 || !onInvite) return;
     await onInvite(inviteSelection);
     setInviteSelection([]);
   };
@@ -63,16 +57,14 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
     <Card>
       <div className="participants-panel">
         <div className="participants-panel__header">
-          <h2 className="participants-panel__title">Участники</h2>
+          <h2 className="participants-panel__title">{t('meeting.participantsTitle')}</h2>
           <span className="participants-panel__count">{participants.length}</span>
         </div>
         {participants.map((participant) => (
           <div key={participant.userId} className="participants-panel__item">
             <div>
               <strong>{participant.userName || participant.email || participant.userId}</strong>
-              <p>
-                Приглашён {formatDate(participant.invitedAt)} в {formatTime(participant.invitedAt)}
-              </p>
+              <p>{t('meeting.invitedAt', { date: formatDate(participant.invitedAt), time: formatTime(participant.invitedAt) })}</p>
               {participant.comment ? <p>{participant.comment}</p> : null}
             </div>
             <div className="participants-panel__actions">
@@ -81,7 +73,7 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
               </Badge>
               {onRemove ? (
                 <Button variant="secondary" onClick={() => setParticipantToRemove(participant)}>
-                  Удалить
+                  {t('common.delete')}
                 </Button>
               ) : null}
             </div>
@@ -89,20 +81,20 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
         ))}
         {onInvite ? (
           <div className="participants-panel__invite">
-            <ParticipantsDropdown label="Добавить участников" users={availableUsers} value={inviteSelection} onChange={setInviteSelection} />
-            <Button onClick={() => void handleInvite()}>Пригласить выбранных</Button>
+            <ParticipantsDropdown label={t('meeting.addParticipants')} users={availableUsers} value={inviteSelection} onChange={setInviteSelection} />
+            <Button onClick={() => void handleInvite()}>{t('meeting.inviteSelected')}</Button>
           </div>
         ) : null}
         {canRespond && participants.some((participant) => participant.userId === currentUserId) ? (
           <div className="participants-panel__response">
-            <Textarea label="Комментарий к ответу" value={comment} onChange={(event) => setComment(event.target.value)} />
+            <Textarea label={t('meeting.responseComment')} value={comment} onChange={(event) => setComment(event.target.value)} />
             <div className="participants-panel__response-actions">
-              <Button onClick={() => onRespond('Accepted', comment)}>Принять</Button>
+              <Button onClick={() => onRespond('Accepted', comment)}>{t('meeting.accept')}</Button>
               <Button variant="secondary" onClick={() => onRespond('Pending', comment)}>
-                Позже
+                {t('meeting.later')}
               </Button>
               <Button variant="danger" onClick={() => onRespond('Declined', comment)}>
-                Отклонить
+                {t('meeting.decline')}
               </Button>
             </div>
           </div>
@@ -111,10 +103,12 @@ export function ParticipantsPanel({ participants, canRespond, currentUserId, onR
 
       <ConfirmDialog
         isOpen={Boolean(participantToRemove)}
-        title="Удаление участника"
-        description={`Вы уверены, что хотите удалить участника «${participantToRemove?.userName || participantToRemove?.email || participantToRemove?.userId}» из этой встречи?`}
-        confirmLabel="Удалить"
-        cancelLabel="Отмена"
+        title={t('meeting.deleteParticipantTitle')}
+        description={t('meeting.deleteParticipantDescription', {
+          name: participantToRemove?.userName || participantToRemove?.email || participantToRemove?.userId || ''
+        })}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         isConfirming={isRemoving}
         onConfirm={async () => {
           if (!participantToRemove || !onRemove) return;

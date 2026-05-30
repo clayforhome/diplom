@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { OrganizerUser } from '../../../types';
 import './ParticipantsDropdown.scss';
 
@@ -24,6 +25,7 @@ function getUserLabel(user: OrganizerUser): string {
 export function ParticipantsDropdown({ label, users, value, onChange, disabled = false }: ParticipantsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isOpen) {
@@ -40,10 +42,7 @@ export function ParticipantsDropdown({ label, users, value, onChange, disabled =
     return () => document.removeEventListener('mousedown', handlePointerDown);
   }, [isOpen]);
 
-  const selectedUsers = useMemo(
-    () => users.filter((user) => value.includes(user.id)),
-    [users, value]
-  );
+  const selectedUsers = useMemo(() => users.filter((user) => value.includes(user.id)), [users, value]);
 
   const toggleUser = (userId: string) => {
     if (value.includes(userId)) {
@@ -54,7 +53,7 @@ export function ParticipantsDropdown({ label, users, value, onChange, disabled =
     onChange([...value, userId]);
   };
 
-  const summary = selectedUsers.length > 0 ? `Выбрано: ${selectedUsers.length}` : 'Выберите участников';
+  const summary = selectedUsers.length > 0 ? t('common.selectedCount', { count: selectedUsers.length }) : t('meeting.chooseParticipants');
 
   return (
     <div ref={rootRef} className={`participants-dropdown${isOpen ? ' participants-dropdown--open' : ''}`}>
@@ -76,15 +75,9 @@ export function ParticipantsDropdown({ label, users, value, onChange, disabled =
       {selectedUsers.length > 0 ? (
         <div className="participants-dropdown__chips">
           {selectedUsers.map((user) => (
-            <button
-              key={user.id}
-              type="button"
-              className="participants-dropdown__chip"
-              onClick={() => toggleUser(user.id)}
-              disabled={disabled}
-            >
+            <button key={user.id} type="button" className="participants-dropdown__chip" onClick={() => toggleUser(user.id)} disabled={disabled}>
               <span>{getUserLabel(user)}</span>
-              <span aria-hidden="true">×</span>
+              <span aria-hidden="true">x</span>
             </button>
           ))}
         </div>
@@ -103,7 +96,7 @@ export function ParticipantsDropdown({ label, users, value, onChange, disabled =
               );
             })
           ) : (
-            <p className="participants-dropdown__empty">Список пользователей пуст.</p>
+            <p className="participants-dropdown__empty">{t('meeting.emptyUsers')}</p>
           )}
         </div>
       ) : null}

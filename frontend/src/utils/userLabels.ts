@@ -1,11 +1,6 @@
+import i18n from '../i18n';
 import type { UserRole } from '../types';
 
-const roleLabels: Record<UserRole, string> = {
-  User: 'Пользователь',
-  Organizer: 'Организатор',
-  Admin: 'Администратор'
-};
-
 export function getUserRoleLabel(role: UserRole): string {
-  return roleLabels[role];
+  return i18n.t(`roles.${role}`);
 }

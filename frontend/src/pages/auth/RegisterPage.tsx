@@ -1,5 +1,8 @@
+import type { TFunction } from 'i18next';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
+import { LanguageSwitcher } from '../../components/i18n/LanguageSwitcher/LanguageSwitcher';
 import { Button } from '../../components/ui/Button/Button';
 import { Card } from '../../components/ui/Card/Card';
 import { Input } from '../../components/ui/Input/Input';
@@ -94,7 +97,7 @@ function normalizePhone(value: string): string | undefined {
   return digits.startsWith('7') ? `+${digits}` : `+7${digits}`;
 }
 
-function validateRegisterForm(form: RegisterFormState): RegisterFormErrors {
+function validateRegisterForm(form: RegisterFormState, t: TFunction): RegisterFormErrors {
   const errors: RegisterFormErrors = {};
   const trimmedName = form.name.trim();
   const trimmedEmail = form.email.trim();
@@ -102,39 +105,39 @@ function validateRegisterForm(form: RegisterFormState): RegisterFormErrors {
   const age = Number(form.age);
 
   if (!trimmedName) {
-    errors.name = 'Укажите имя';
+    errors.name = t('auth.validation.nameRequired');
   }
 
   if (!trimmedEmail) {
-    errors.email = 'Укажите email';
+    errors.email = t('auth.validation.emailRequired');
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-    errors.email = 'Введите корректный email';
+    errors.email = t('auth.validation.emailInvalid');
   }
 
   if (!form.password) {
-    errors.password = 'Укажите пароль';
+    errors.password = t('auth.validation.passwordRequired');
   } else if (form.password.length < 6) {
-    errors.password = 'Пароль должен содержать минимум 6 символов';
+    errors.password = t('auth.validation.passwordMin');
   } else if (!/[A-Z]/.test(form.password)) {
-    errors.password = 'Добавьте хотя бы одну заглавную букву';
+    errors.password = t('auth.validation.passwordUpper');
   } else if (!/[a-z]/.test(form.password)) {
-    errors.password = 'Добавьте хотя бы одну строчную букву';
+    errors.password = t('auth.validation.passwordLower');
   } else if (!/\d/.test(form.password)) {
-    errors.password = 'Добавьте хотя бы одну цифру';
+    errors.password = t('auth.validation.passwordDigit');
   } else if (!/[^A-Za-z0-9]/.test(form.password)) {
-    errors.password = 'Добавьте хотя бы один специальный символ';
+    errors.password = t('auth.validation.passwordSpecial');
   }
 
   if (form.phoneNumber.trim() && (!normalizedPhone || extractDigits(normalizedPhone).length !== 11)) {
-    errors.phoneNumber = 'Телефон должен быть заполнен полностью';
+    errors.phoneNumber = t('auth.validation.phoneIncomplete');
   }
 
   if (!form.age.trim()) {
-    errors.age = 'Укажите возраст';
+    errors.age = t('auth.validation.ageRequired');
   } else if (!Number.isInteger(age)) {
-    errors.age = 'Возраст должен быть целым числом';
+    errors.age = t('auth.validation.ageInteger');
   } else if (age <= 0) {
-    errors.age = 'Возраст должен быть больше нуля';
+    errors.age = t('auth.validation.agePositive');
   }
 
   return errors;
@@ -145,6 +148,7 @@ export function RegisterPage() {
   const dispatch = useAppDispatch();
   const toast = useToast();
   const isLoading = useAppSelector((state) => state.auth.isLoading);
+  const { t, i18n } = useTranslation();
   const [form, setForm] = useState<RegisterFormState>({
     name: '',
     email: '',
@@ -156,16 +160,16 @@ export function RegisterPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
-    document.title = 'Регистрация - Система управления встречами';
-  }, []);
+    document.title = `${t('auth.registerTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
   useEffect(() => {
     if (!isSubmitted) {
       return;
     }
 
-    setErrors(validateRegisterForm(form));
-  }, [form, isSubmitted]);
+    setErrors(validateRegisterForm(form, t));
+  }, [form, isSubmitted, t, i18n.resolvedLanguage]);
 
   return (
     <div className="auth-page">
@@ -176,11 +180,11 @@ export function RegisterPage() {
             event.preventDefault();
             setIsSubmitted(true);
 
-            const nextErrors = validateRegisterForm(form);
+            const nextErrors = validateRegisterForm(form, t);
             setErrors(nextErrors);
 
             if (Object.keys(nextErrors).length > 0) {
-              toast('Проверьте форму регистрации', 'error');
+              toast(t('auth.registerInvalid'), 'error');
               return;
             }
 
@@ -194,27 +198,30 @@ export function RegisterPage() {
                   age: Number(form.age)
                 })
               ).unwrap();
-              toast('Аккаунт создан, можно входить', 'success');
+              toast(t('auth.registerSuccess'), 'success');
               navigate('/auth/login');
             } catch (error) {
               if (error instanceof ApiError) {
-                toast(error.message || 'Не удалось создать аккаунт', 'error');
+                toast(error.message || t('auth.registerError'), 'error');
                 return;
               }
 
-              toast('Не удалось создать аккаунт', 'error');
+              toast(t('auth.registerError'), 'error');
             }
           }}
         >
-          <div className="auth-page__hero">
-            <span className="auth-page__eyebrow">Новый аккаунт</span>
-            <h1 className="auth-page__title">Создание аккаунта</h1>
+          <div className="auth-page__topbar">
+            <LanguageSwitcher />
           </div>
-          <Input label="Имя" value={form.name} error={errors.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
-          <Input label="Эл. почта" type="email" value={form.email} error={errors.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
-          <Input label="Пароль" type="password" value={form.password} error={errors.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} required />
+          <div className="auth-page__hero">
+            <span className="auth-page__eyebrow">{t('auth.registerEyebrow')}</span>
+            <h1 className="auth-page__title">{t('auth.registerHeading')}</h1>
+          </div>
+          <Input label={t('auth.nameField')} value={form.name} error={errors.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+          <Input label={t('auth.emailField')} type="email" value={form.email} error={errors.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
+          <Input label={t('auth.passwordField')} type="password" value={form.password} error={errors.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} required />
           <Input
-            label="Телефон"
+            label={t('auth.phoneField')}
             type="tel"
             inputMode="tel"
             maxLength={18}
@@ -233,7 +240,7 @@ export function RegisterPage() {
             }}
           />
           <Input
-            label="Возраст"
+            label={t('auth.ageField')}
             type="text"
             inputMode="numeric"
             value={form.age}
@@ -241,12 +248,12 @@ export function RegisterPage() {
             onChange={(event) => setForm((current) => ({ ...current, age: extractDigits(event.target.value).slice(0, 3) }))}
             required
           />
-          {Object.keys(errors).length > 0 ? <p className="auth-page__validation">Исправьте ошибки в форме перед отправкой.</p> : null}
+          {Object.keys(errors).length > 0 ? <p className="auth-page__validation">{t('auth.confirmErrors')}</p> : null}
           <Button type="submit" fullWidth disabled={isLoading}>
-            {isLoading ? 'Отправка...' : 'Зарегистрироваться'}
+            {isLoading ? t('auth.submitting') : t('auth.submitRegister')}
           </Button>
           <p className="auth-page__switch">
-            Уже есть аккаунт? <Link to="/auth/login">Войти</Link>
+            {t('auth.hasAccount')} <Link to="/auth/login">{t('auth.loginLink')}</Link>
           </p>
         </form>
       </Card>

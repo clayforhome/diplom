@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import i18n from '../i18n';
 
 const avatarPalette = [
   { start: '#0a84ff', end: '#64d2ff', shadow: 'rgba(10, 132, 255, 0.22)' },
@@ -16,7 +17,7 @@ function normalizeIdentityPart(value?: string | null): string {
 }
 
 function getFioSource(name?: string | null, userName?: string | null, email?: string | null): string {
-  return normalizeIdentityPart(name) || normalizeIdentityPart(userName) || normalizeIdentityPart(email) || 'Пользователь';
+  return normalizeIdentityPart(name) || normalizeIdentityPart(userName) || normalizeIdentityPart(email) || i18n.t('common.user');
 }
 
 export function getDisplayName(name?: string | null, userName?: string | null, email?: string | null): string {

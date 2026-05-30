@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import i18n from '../../i18n';
 import { authService } from '../../http/authService';
 import type { CurrentUser, LoginRequest, RegisterRequest } from '../../types';
 import { jwtService } from '../../utils/jwt';
@@ -40,13 +41,8 @@ export const loginThunk = createAsyncThunk('auth/login', async (payload: LoginRe
   return result.token;
 });
 
-export const registerThunk = createAsyncThunk('auth/register', async (payload: RegisterRequest) => {
-  return authService.register(payload);
-});
-
-export const fetchCurrentUserThunk = createAsyncThunk('auth/fetchCurrentUser', async () => {
-  return authService.getCurrentUser();
-});
+export const registerThunk = createAsyncThunk('auth/register', async (payload: RegisterRequest) => authService.register(payload));
+export const fetchCurrentUserThunk = createAsyncThunk('auth/fetchCurrentUser', async () => authService.getCurrentUser());
 
 const authSlice = createSlice({
   name: 'auth',
@@ -87,7 +83,7 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message ?? 'Не удалось войти';
+        state.error = action.error.message ?? i18n.t('auth.loginError');
       })
       .addCase(registerThunk.pending, (state) => {
         state.isLoading = true;
@@ -98,7 +94,7 @@ const authSlice = createSlice({
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message ?? 'Не удалось зарегистрироваться';
+        state.error = action.error.message ?? i18n.t('auth.registerError');
       })
       .addCase(fetchCurrentUserThunk.fulfilled, (state, action) => {
         state.user = action.payload;

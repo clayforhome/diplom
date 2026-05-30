@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './Select.scss';
 
 interface SelectOption {
@@ -18,6 +19,7 @@ export function Select({ label, value, onChange, options }: SelectProps) {
   const [highlightedIndex, setHighlightedIndex] = useState(() => Math.max(0, options.findIndex((option) => option.value === value)));
   const rootRef = useRef<HTMLLabelElement | null>(null);
   const listboxId = useId();
+  const { t } = useTranslation();
   const selectedOption = useMemo(
     () => options.find((option) => option.value === value) ?? options[0] ?? null,
     [options, value]
@@ -67,30 +69,21 @@ export function Select({ label, value, onChange, options }: SelectProps) {
           aria-expanded={isOpen}
           aria-controls={listboxId}
           onClick={() => {
-            if (options.length === 0) {
-              return;
-            }
-
+            if (options.length === 0) return;
             setIsOpen((current) => !current);
           }}
           onKeyDown={(event) => {
-            if (options.length === 0) {
-              return;
-            }
+            if (options.length === 0) return;
 
             switch (event.key) {
               case 'ArrowDown':
                 event.preventDefault();
-                if (!isOpen) {
-                  setIsOpen(true);
-                }
+                if (!isOpen) setIsOpen(true);
                 moveHighlight(highlightedIndex + 1);
                 break;
               case 'ArrowUp':
                 event.preventDefault();
-                if (!isOpen) {
-                  setIsOpen(true);
-                }
+                if (!isOpen) setIsOpen(true);
                 moveHighlight(highlightedIndex - 1);
                 break;
               case 'Enter':
@@ -98,9 +91,7 @@ export function Select({ label, value, onChange, options }: SelectProps) {
                 event.preventDefault();
                 if (isOpen) {
                   const option = options[highlightedIndex];
-                  if (option) {
-                    commitSelection(option.value);
-                  }
+                  if (option) commitSelection(option.value);
                 } else {
                   setIsOpen(true);
                 }
@@ -116,7 +107,7 @@ export function Select({ label, value, onChange, options }: SelectProps) {
             }
           }}
         >
-          <span className="select-field__value">{selectedOption?.label ?? 'Не выбрано'}</span>
+          <span className="select-field__value">{selectedOption?.label ?? t('common.notSelected')}</span>
           <span className="select-field__icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" focusable="false">
               <path d="M4.25 6.25 8 10l3.75-3.75" />

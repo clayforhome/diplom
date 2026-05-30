@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { sessionsService } from '../../../http/sessionsService';
+import { useToast } from '../../../hooks/useToast';
+import { useUiSelectOptions } from '../../../hooks/useUiSelectOptions';
+import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser, SelectOption } from '../../../types';
+import { Card } from '../../ui/Card/Card';
 import { Button } from '../../ui/Button/Button';
 import { Input } from '../../ui/Input/Input';
 import { Select } from '../../ui/Select/Select';
 import { Textarea } from '../../ui/Textarea/Textarea';
-import { Card } from '../../ui/Card/Card';
-import { sessionsService } from '../../../http/sessionsService';
-import { useUiSelectOptions } from '../../../hooks/useUiSelectOptions';
-import { useToast } from '../../../hooks/useToast';
-import type { MeetingFormValues, MeetingFormat, MeetingStatus, OrganizerUser, SelectOption } from '../../../types';
 import { ParticipantsDropdown } from '../ParticipantsDropdown/ParticipantsDropdown';
 import './MeetingForm.scss';
 
@@ -26,9 +27,9 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
   const [organizerUsers, setOrganizerUsers] = useState<OrganizerUser[]>([]);
   const selectOptions = useUiSelectOptions();
   const toast = useToast();
+  const { t } = useTranslation();
 
   const now = new Date();
-  // We use local timezone formatting instead of toISOString() to avoid UTC shift
   const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const currentTimeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -38,30 +39,19 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
 
   useEffect(() => {
     const formats = selectOptions?.meetingFormats.map((option) => option.value as MeetingFormat) ?? [];
-
-    if (formats.length === 0) {
-      return;
-    }
+    if (formats.length === 0) return;
 
     setValues((current) => {
-      if (formats.includes(current.format)) {
-        return current;
-      }
-
+      if (formats.includes(current.format)) return current;
       return { ...current, format: formats[0] };
     });
   }, [selectOptions]);
 
   useEffect(() => {
-    if (!isEditing) {
-      return;
-    }
+    if (!isEditing) return;
 
     const statuses = selectOptions?.meetingStatuses.map((option) => option.value as MeetingStatus) ?? [];
-
-    if (statuses.length === 0) {
-      return;
-    }
+    if (statuses.length === 0) return;
 
     setValues((current) => ({
       ...current,
@@ -71,13 +61,9 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
 
   useEffect(() => {
     let isMounted = true;
-
     void sessionsService.getOrganizerUsers().then((users) => {
-      if (isMounted) {
-        setOrganizerUsers(users);
-      }
+      if (isMounted) setOrganizerUsers(users);
     });
-
     return () => {
       isMounted = false;
     };
@@ -95,10 +81,7 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
     [selectOptions, values.format]
   );
 
-  const statusOptions = useMemo(
-    () => (selectOptions?.meetingStatuses ?? []).map((option) => option as SelectOption<MeetingStatus>),
-    [selectOptions]
-  );
+  const statusOptions = useMemo(() => (selectOptions?.meetingStatuses ?? []).map((option) => option as SelectOption<MeetingStatus>), [selectOptions]);
 
   return (
     <Card>
@@ -107,34 +90,33 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          
+
           const newErrors: Partial<Record<keyof MeetingFormValues, string>> = {};
 
-          if (!values.title?.trim()) newErrors.title = 'Обязательное поле';
+          if (!values.title?.trim()) newErrors.title = t('meeting.form.required');
+          if (!values.date) newErrors.date = t('meeting.form.required');
+          else if (values.date < todayString) newErrors.date = t('meeting.form.inPast');
 
-          if (!values.date) newErrors.date = 'Обязательное поле';
-          else if (values.date < todayString) newErrors.date = 'Не может быть в прошлом';
-          
-          if (!values.startTime) newErrors.startTime = 'Обязательное поле';
-          else if (values.date === todayString && values.startTime < currentTimeString) newErrors.startTime = 'Не может быть в прошлом';
-          
-          if (!values.endTime) newErrors.endTime = 'Обязательное поле';
-          else if (values.endTime <= values.startTime) newErrors.endTime = 'Должно быть позже начала';
-          
+          if (!values.startTime) newErrors.startTime = t('meeting.form.required');
+          else if (values.date === todayString && values.startTime < currentTimeString) newErrors.startTime = t('meeting.form.inPast');
+
+          if (!values.endTime) newErrors.endTime = t('meeting.form.required');
+          else if (values.endTime <= values.startTime) newErrors.endTime = t('meeting.form.afterStart');
+
           const isOfflineOrHybrid = values.format === 'Offline' || values.format === 'Hybrid';
           const isOnlineOrHybrid = values.format === 'Online' || values.format === 'Hybrid';
 
           if (isOfflineOrHybrid && !values.location?.trim()) {
-            newErrors.location = 'Локация обязательна для данного формата';
+            newErrors.location = t('meeting.form.locationRequired');
           }
 
           if (isOnlineOrHybrid && !values.meetingLink?.trim()) {
-            newErrors.meetingLink = 'Ссылка обязательна для данного формата';
+            newErrors.meetingLink = t('meeting.form.linkRequired');
           }
 
           if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            toast('Пожалуйста, исправьте ошибки в форме', 'error');
+            toast(t('meeting.form.fixErrors'), 'error');
             return;
           }
 
@@ -142,74 +124,30 @@ export function MeetingForm({ initialValues, onSubmit, onCheckAvailability, isEd
         }}
       >
         <div className="meeting-form__grid">
-          <Input 
-            label="Название встречи" 
-            value={values.title} 
-            onChange={(event) => updateField('title', event.target.value)} 
-            error={errors.title}
-          />
-
-          <Input 
-            label="Дата" 
-            type="date" 
-            min={todayString}
-            value={values.date} 
-            onChange={(event) => updateField('date', event.target.value)} 
-            error={errors.date}
-          />
-          <Input 
-            label="Начало" 
-            type="time" 
-            min={values.date === todayString ? currentTimeString : undefined}
-            value={values.startTime} 
-            onChange={(event) => updateField('startTime', event.target.value)} 
-            error={errors.startTime}
-          />
-          <Input 
-            label="Окончание" 
-            type="time" 
-            min={values.startTime}
-            value={values.endTime} 
-            onChange={(event) => updateField('endTime', event.target.value)} 
-            error={errors.endTime}
-          />
-          <Select label="Формат" value={values.format} onChange={(value) => updateField('format', value as MeetingFormat)} options={formatOptions} />
-          {isEditing && values.status ? (
-            <Select label="Статус" value={values.status} onChange={(value) => updateField('status', value as MeetingStatus)} options={statusOptions} />
-          ) : null}
-          <Input 
-            label="Локация" 
-            value={values.location} 
-            onChange={(event) => updateField('location', event.target.value)} 
-            error={errors.location}
-          />
-          <Input 
-            label="Ссылка на встречу" 
-            value={values.meetingLink} 
-            onChange={(event) => updateField('meetingLink', event.target.value)} 
-            error={errors.meetingLink}
-          />
-          <Input label="Контактная информация" value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
+          <Input label={t('meeting.form.title')} value={values.title} onChange={(event) => updateField('title', event.target.value)} error={errors.title} />
+          <Input label={t('meeting.form.date')} type="date" min={todayString} value={values.date} onChange={(event) => updateField('date', event.target.value)} error={errors.date} />
+          <Input label={t('meeting.form.start')} type="time" min={values.date === todayString ? currentTimeString : undefined} value={values.startTime} onChange={(event) => updateField('startTime', event.target.value)} error={errors.startTime} />
+          <Input label={t('meeting.form.end')} type="time" min={values.startTime} value={values.endTime} onChange={(event) => updateField('endTime', event.target.value)} error={errors.endTime} />
+          <Select label={t('meeting.form.format')} value={values.format} onChange={(value) => updateField('format', value as MeetingFormat)} options={formatOptions} />
+          {isEditing && values.status ? <Select label={t('meeting.form.status')} value={values.status} onChange={(value) => updateField('status', value as MeetingStatus)} options={statusOptions} /> : null}
+          <Input label={t('meeting.form.location')} value={values.location} onChange={(event) => updateField('location', event.target.value)} error={errors.location} />
+          <Input label={t('meeting.form.meetingLink')} value={values.meetingLink} onChange={(event) => updateField('meetingLink', event.target.value)} error={errors.meetingLink} />
+          <Input label={t('meeting.form.contactInfo')} value={values.contactInfo} onChange={(event) => updateField('contactInfo', event.target.value)} />
           {!isEditing ? (
             <div className="meeting-form__full-width">
-              <ParticipantsDropdown
-                label="Участники"
-                users={organizerUsers}
-                value={values.participantIds}
-                onChange={(participantIds) => updateField('participantIds', participantIds)}
-              />
+              <ParticipantsDropdown label={t('meeting.form.participants')} users={organizerUsers} value={values.participantIds} onChange={(participantIds) => updateField('participantIds', participantIds)} />
             </div>
           ) : null}
         </div>
-        <Textarea label="Описание" value={values.description} onChange={(event) => updateField('description', event.target.value)} />
+        <Textarea label={t('meeting.form.description')} value={values.description} onChange={(event) => updateField('description', event.target.value)} />
         <div className="meeting-form__actions">
           {onCheckAvailability ? (
             <Button type="button" variant="secondary" onClick={() => void onCheckAvailability(values)}>
-              Проверить занятость
+              {t('meeting.form.checkAvailability')}
             </Button>
           ) : null}
           {footerActions}
-          <Button type="submit">{isEditing ? 'Сохранить изменения' : 'Создать встречу'}</Button>
+          <Button type="submit">{isEditing ? t('meeting.form.saveChanges') : t('meeting.form.createMeeting')}</Button>
         </div>
       </form>
     </Card>

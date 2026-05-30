@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { PageSection } from '../../components/layout/PageSection/PageSection';
 import { Badge } from '../../components/ui/Badge/Badge';
 import { Button } from '../../components/ui/Button/Button';
 import { Input } from '../../components/ui/Input/Input';
-import { PageSection } from '../../components/layout/PageSection/PageSection';
-import { useAppSelector } from '../../store/hooks';
 import { authService } from '../../http/authService';
 import { useToast } from '../../hooks/useToast';
+import { useAppSelector } from '../../store/hooks';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getProfileAvatarStyle, getProfileInitials } from '../../utils/profile';
 import { getUserRoleLabel } from '../../utils/userLabels';
@@ -14,6 +15,7 @@ import { getUserRoleLabel } from '../../utils/userLabels';
 export function ProfilePage() {
   const user = useAppSelector((state) => state.auth.user);
   const toast = useToast();
+  const { t, i18n } = useTranslation();
   const displayName = getDisplayName(user?.name, user?.userName, user?.email);
   const initials = getProfileInitials(user?.name, user?.userName, user?.email);
   const avatarStyle = getProfileAvatarStyle(user?.name, user?.userName, user?.email);
@@ -23,17 +25,17 @@ export function ProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
-    document.title = 'Мой профиль - Система управления встречами';
-  }, []);
+    document.title = `${t('profile.pageTitle')} - ${t('common.appName')}`;
+  }, [t, i18n.resolvedLanguage]);
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      toast('Заполните все поля для смены пароля', 'error');
+      toast(t('profile.fillPasswordFields'), 'error');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast('Новый пароль и подтверждение не совпадают', 'error');
+      toast(t('profile.passwordsMismatch'), 'error');
       return;
     }
 
@@ -44,38 +46,38 @@ export function ProfilePage() {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast('Пароль успешно изменён', 'success');
+      toast(t('profile.passwordChanged'), 'success');
     } catch {
-      toast('Не удалось изменить пароль', 'error');
+      toast(t('profile.passwordChangeError'), 'error');
     } finally {
       setIsChangingPassword(false);
     }
   };
 
   return (
-    <PageSection title="Мой профиль">
+    <PageSection title={t('profile.title')}>
       <div className="profile-hero">
         <div className="profile-hero__identity">
           <div className="profile-hero__avatar" style={avatarStyle} aria-hidden="true">
             {initials}
           </div>
           <div>
-            <span className="profile-hero__eyebrow">Снимок аккаунта</span>
+            <span className="profile-hero__eyebrow">{t('profile.accountSnapshot')}</span>
             <h2>{displayName}</h2>
-            <p>{user?.email ?? 'Эл. почта не указана'}</p>
+            <p>{user?.email ?? t('common.emailNotSpecified')}</p>
           </div>
         </div>
         <div className="profile-hero__meta">
           <div>
             <strong>{user?.age ?? '-'}</strong>
-            <span>возраст в профиле</span>
+            <span>{t('profile.ageInProfile')}</span>
           </div>
           <div>
             <strong>{user?.registrationDate ? formatDate(user.registrationDate) : '-'}</strong>
-            <span>дата регистрации</span>
+            <span>{t('profile.registrationDate')}</span>
           </div>
           <div className="profile-hero__roles-card">
-            <strong>Роли и доступ</strong>
+            <strong>{t('profile.rolesAndAccess')}</strong>
             <div className="profile-role-cloud profile-role-cloud--compact">
               {(user?.roles ?? []).map((role) => (
                 <Badge key={role} tone="info">
@@ -91,25 +93,25 @@ export function ProfilePage() {
         <div className="profile-column profile-column--main">
           <section className="profile-panel">
             <div className="profile-panel__header">
-              <h3>Основная информация</h3>
-              <span>Данные аккаунта</span>
+              <h3>{t('profile.mainInfo')}</h3>
+              <span>{t('profile.accountData')}</span>
             </div>
             <div className="profile-facts profile-facts--stacked">
               <div className="profile-facts__item">
-                <span>ФИО</span>
-                <strong>{user?.name ?? user?.userName ?? 'Не указано'}</strong>
+                <span>{t('profile.fullName')}</span>
+                <strong>{user?.name ?? user?.userName ?? t('common.notSpecifiedNeutral')}</strong>
               </div>
               <div className="profile-facts__item">
-                <span>Эл. почта</span>
-                <strong>{user?.email ?? 'Не указана'}</strong>
+                <span>{t('profile.email')}</span>
+                <strong>{user?.email ?? t('common.notSpecified')}</strong>
               </div>
               <div className="profile-facts__item">
-                <span>Возраст</span>
-                <strong>{user?.age ?? 'Не указан'}</strong>
+                <span>{t('profile.age')}</span>
+                <strong>{user?.age ?? t('common.notSpecifiedNeutral')}</strong>
               </div>
               <div className="profile-facts__item">
-                <span>Регистрация</span>
-                <strong>{user?.registrationDate ? formatDate(user.registrationDate) : 'Неизвестно'}</strong>
+                <span>{t('profile.registration')}</span>
+                <strong>{user?.registrationDate ? formatDate(user.registrationDate) : t('common.unknown')}</strong>
               </div>
             </div>
           </section>
@@ -118,14 +120,14 @@ export function ProfilePage() {
         <div className="profile-column profile-column--side">
           <section className="profile-panel profile-panel--password-card">
             <div className="profile-panel__header">
-              <h3>Смена пароля</h3>
+              <h3>{t('profile.changePassword')}</h3>
             </div>
             <div className="profile-password">
-              <Input label="Текущий пароль" type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />
-              <Input label="Новый пароль" type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-              <Input label="Подтверждение нового пароля" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+              <Input label={t('profile.currentPassword')} type="password" value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} />
+              <Input label={t('profile.newPassword')} type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+              <Input label={t('profile.confirmNewPassword')} type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
               <Button onClick={() => void handleChangePassword()} disabled={isChangingPassword}>
-                Сменить пароль
+                {t('profile.changePasswordButton')}
               </Button>
             </div>
           </section>
@@ -134,12 +136,12 @@ export function ProfilePage() {
 
       <section className="profile-panel profile-panel--accent">
         <div className="profile-panel__header">
-          <h3>Следующий шаг</h3>
-          <span>Быстрый переход</span>
+          <h3>{t('profile.nextStep')}</h3>
+          <span>{t('profile.quickLinks')}</span>
         </div>
         <div className="profile-action-links">
-          <Link to="/sessions">Перейти к встречам</Link>
-          <Link to="/">Вернуться на главную панель</Link>
+          <Link to="/sessions">{t('profile.toMeetings')}</Link>
+          <Link to="/">{t('profile.toDashboard')}</Link>
         </div>
       </section>
     </PageSection>
