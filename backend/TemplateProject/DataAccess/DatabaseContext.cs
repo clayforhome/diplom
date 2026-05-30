@@ -28,6 +28,7 @@ public class DatabaseContext : IdentityDbContext<
     public DbSet<Meeting> Meetings => Set<Meeting>();
     public DbSet<MeetingParticipant> MeetingParticipants => Set<MeetingParticipant>();
     public DbSet<MeetingFile> MeetingFiles => Set<MeetingFile>();
+    public DbSet<Message> Messages => Set<Message>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -117,6 +118,29 @@ public class DatabaseContext : IdentityDbContext<
             
             builder.HasIndex(mf => mf.MeetingId);
         });
+        
+        // Configure Message table
+        modelBuilder.Entity<Message>(builder =>
+        {
+            builder.ToTable("Messages");
+            builder.HasKey(m => m.Id);
+            
+            builder.Property(m => m.Subject).IsRequired().HasMaxLength(255);
+            builder.Property(m => m.Body).IsRequired().HasColumnType("text");
+                
+            builder.HasOne(m => m.Recipient)
+                .WithMany()
+                .HasForeignKey(m => m.RecipientId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            builder.HasOne(m => m.Meeting)
+                .WithMany()
+                .HasForeignKey(m => m.MeetingId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            builder.HasIndex(m => m.RecipientId);
+            builder.HasIndex(m => m.SentAt);
+        });
     }
 
     private void ConfigureDictionaries(ModelBuilder modelBuilder)
@@ -142,6 +166,11 @@ public class DatabaseContext : IdentityDbContext<
         builder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims", IdentitySchema);
         builder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins", IdentitySchema);
         builder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims", IdentitySchema);
+
+        // Configure User soft delete
+        
+        builder.Entity<User>()
+            .HasIndex(u => u.IsDeleted);
 
         builder.Entity<User>()
             .HasIndex(u => u.NormalizedEmail)

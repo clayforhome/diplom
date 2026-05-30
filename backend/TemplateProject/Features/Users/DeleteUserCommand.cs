@@ -32,8 +32,13 @@ public class DeleteUserCommand : IFeatureEndpoint
 
     public record Response
     {
-        public MediatR.Unit Data { get; set; }
+        public DeleteUserResponseData Data { get; set; }
         public string Status { get; set; }
+    }
+    
+    public class DeleteUserResponseData
+    {
+        public string Message { get; set; } = "User deleted successfully";
     }
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
@@ -41,12 +46,18 @@ public class DeleteUserCommand : IFeatureEndpoint
         private readonly DatabaseContext _context;
         private readonly UserManager<Domain.User> _userManager;
         private readonly CurrentUserProvider _currentUserProvider;
+        private readonly TimeProvider _timeProvider;
 
-        public Handler(DatabaseContext context, UserManager<Domain.User> userManager, CurrentUserProvider currentUserProvider)
+        public Handler(
+            DatabaseContext context,
+            UserManager<Domain.User> userManager,
+            CurrentUserProvider currentUserProvider,
+            TimeProvider timeProvider)
         {
             _context = context;
             _userManager = userManager;
             _currentUserProvider = currentUserProvider;
+            _timeProvider = timeProvider;
         }
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -65,6 +76,11 @@ public class DeleteUserCommand : IFeatureEndpoint
                 return ApiErrors.NotFound.Instance;
             }
 
+            if (user.IsDeleted)
+            {
+                return new ApiErrors.ValidationError("User is already deleted.");
+            }
+
             var hasOrganizedMeetings = await _context.Meetings
                 .AnyAsync(m => m.OrganizerId == request.UserId && !m.IsDeleted, cancellationToken);
 
@@ -81,14 +97,19 @@ public class DeleteUserCommand : IFeatureEndpoint
                 return new ApiErrors.ValidationError("User cannot be deleted while uploaded files are linked to the account.");
             }
 
-            var result = await _userManager.DeleteAsync(user);
+            // Выполнить soft delete вместо физического удаления
+            user.IsDeleted = true;
+            user.DeletedAt = _timeProvider.GetUtcNow().UtcDateTime;
+            user.DeletedBy = currentUserId;
+
+            var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
                 return new ApiErrors.ValidationError(result.Errors.Select(error => error.Description).ToArray());
             }
 
-            return new Response { Data = MediatR.Unit.Value, Status = "Ok" };
+            return new Response { Data = new DeleteUserResponseData(), Status = "Ok" };
         }
     }
 }

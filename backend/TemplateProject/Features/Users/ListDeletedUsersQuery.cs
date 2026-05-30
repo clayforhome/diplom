@@ -1,19 +1,19 @@
 using JetBrains.Annotations;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TemplateProject.Common;
 using TemplateProject.DataAccess;
+using TemplateProject.Services;
 
 namespace TemplateProject.Features.Users;
 
 [PublicAPI]
-public class ListUsersQuery : IFeatureEndpoint
+public class ListDeletedUsersQuery : IFeatureEndpoint
 {
     public void Map(IEndpointRouteBuilder endpointRouteBuilder)
     {
-        endpointRouteBuilder.MapGet("/api/v1/users", async (
+        endpointRouteBuilder.MapGet("/api/v1/users/deleted", async (
                 [FromQuery] int page,
                 [FromQuery] int limit,
                 IMediator mediator,
@@ -21,7 +21,7 @@ public class ListUsersQuery : IFeatureEndpoint
             {
                 return await mediator.Send(new Request(page, limit), cancellationToken);
             })
-            .WithName("ListUsers")
+            .WithName("ListDeletedUsers")
             .WithTags("Users")
             .WithOpenApi()
             .RequireAuthorization(AuthorizationPolicy.OnlyAdminPolicy);
@@ -37,57 +37,66 @@ public class ListUsersQuery : IFeatureEndpoint
 
     public class PaginatedResult
     {
-        public List<UserDto> Items { get; set; } = [];
+        public List<DeletedUserDto> Items { get; set; } = [];
         public int Total { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
     }
 
-    public class UserDto
+    public class DeletedUserDto
     {
         public Guid Id { get; set; }
         public required string Name { get; set; }
         public string? UserName { get; set; }
         public string? Email { get; set; }
         public int? Age { get; set; }
-        public bool EmailConfirmed { get; set; }
-        public DateTime? RegistrationDate { get; set; }
-        public List<string> Roles { get; set; } = [];
+        public DateTime? DeletedAt { get; set; }
+        public string? DeletedByName { get; set; }
+        public Guid? DeletedBy { get; set; }
     }
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
     {
         private readonly DatabaseContext _context;
+        private readonly CurrentUserProvider _currentUserProvider;
 
-        public Handler(DatabaseContext context)
+        public Handler(DatabaseContext context, CurrentUserProvider currentUserProvider)
         {
             _context = context;
+            _currentUserProvider = currentUserProvider;
         }
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+
+            if (currentUserId == null)
+            {
+                return ApiErrors.Unauthorized.Instance;
+            }
+            
+            var currentUser = await _context.Users.FindAsync([currentUserId], cancellationToken);
+            
             var query = _context.Users
-                .Where(u => !u.IsDeleted)
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role);
+                .Where(u => u.IsDeleted);
 
             var total = await query.CountAsync(cancellationToken);
 
             var skip = (request.Page - 1) * request.Limit;
             var users = await query
-                .OrderByDescending(u => u.RegistrationDate)
+                .OrderByDescending(u => u.DeletedAt)
                 .Skip(skip)
                 .Take(request.Limit)
-                .Select(u => new UserDto
+                .Select(u => new DeletedUserDto
                 {
                     Id = u.Id,
                     UserName = u.UserName,
                     Email = u.Email,
                     Age = u.Age,
                     Name = u.Name,
-                    EmailConfirmed = u.EmailConfirmed,
-                    RegistrationDate = u.RegistrationDate,
-                    Roles = u.UserRoles.Select(ur => ur.Role.Name ?? "").ToList()
+                    DeletedAt = u.DeletedAt,
+                    DeletedBy = u.DeletedBy,
+                    DeletedByName = currentUser!.Name
                 })
                 .ToListAsync(cancellationToken);
 

@@ -53,6 +53,7 @@ builder.Services.AddOpenApi(opt =>
 });
 builder.Services.AddTransient<TimeProvider>(_ => TimeProvider.System);
 builder.Services.AddScoped<CurrentUserProvider>();
+builder.Services.AddTransient<IEmailNotificationService, EmailNotificationService>();
 
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 

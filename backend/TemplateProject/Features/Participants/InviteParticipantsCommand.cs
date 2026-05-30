@@ -48,12 +48,18 @@ public class InviteParticipantsCommand : IFeatureEndpoint
         private readonly DatabaseContext _context;
         private readonly CurrentUserProvider _currentUserProvider;
         private readonly TimeProvider _timeProvider;
+        private readonly IEmailNotificationService _emailService;
 
-        public Handler(DatabaseContext context, CurrentUserProvider currentUserProvider, TimeProvider timeProvider)
+        public Handler(
+            DatabaseContext context,
+            CurrentUserProvider currentUserProvider,
+            TimeProvider timeProvider,
+            IEmailNotificationService emailService)
         {
             _context = context;
             _currentUserProvider = currentUserProvider;
             _timeProvider = timeProvider;
+            _emailService = emailService;
         }
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -95,6 +101,23 @@ public class InviteParticipantsCommand : IFeatureEndpoint
                 };
 
                 _context.MeetingParticipants.Add(participant);
+                
+                // Отправить email уведомление
+                var recipientUser = await _context.Users
+                    .FindAsync([participantId], cancellationToken);
+                
+                if (recipientUser != null && !recipientUser.IsDeleted)
+                {
+                    try
+                    {
+                        await _emailService.SendMeetingInvitationAsync(recipientUser, meeting, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Логирование ошибки, но процесс не прерывается
+                        System.Diagnostics.Debug.WriteLine($"Ошибка отправки email: {ex.Message}");
+                    }
+                }
             }
 
             await _context.SaveChangesAsync(cancellationToken);

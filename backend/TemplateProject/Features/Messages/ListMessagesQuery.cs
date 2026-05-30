@@ -1,19 +1,19 @@
 using JetBrains.Annotations;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TemplateProject.Common;
 using TemplateProject.DataAccess;
+using TemplateProject.Services;
 
-namespace TemplateProject.Features.Users;
+namespace TemplateProject.Features.Messages;
 
 [PublicAPI]
-public class ListUsersQuery : IFeatureEndpoint
+public class ListMessagesQuery : IFeatureEndpoint
 {
     public void Map(IEndpointRouteBuilder endpointRouteBuilder)
     {
-        endpointRouteBuilder.MapGet("/api/v1/users", async (
+        endpointRouteBuilder.MapGet("/api/v1/messages", async (
                 [FromQuery] int page,
                 [FromQuery] int limit,
                 IMediator mediator,
@@ -21,10 +21,10 @@ public class ListUsersQuery : IFeatureEndpoint
             {
                 return await mediator.Send(new Request(page, limit), cancellationToken);
             })
-            .WithName("ListUsers")
-            .WithTags("Users")
+            .WithName("ListMessages")
+            .WithTags("Messages")
             .WithOpenApi()
-            .RequireAuthorization(AuthorizationPolicy.OnlyAdminPolicy);
+            .RequireAuthorization(AuthorizationPolicy.ManagementPolicy);
     }
 
     public record Request(int Page, int Limit) : IRequest<BaseApiResponse<Response>>;
@@ -37,63 +37,67 @@ public class ListUsersQuery : IFeatureEndpoint
 
     public class PaginatedResult
     {
-        public List<UserDto> Items { get; set; } = [];
+        public List<MessageDto> Items { get; set; } = [];
         public int Total { get; set; }
         public int Page { get; set; }
         public int PageSize { get; set; }
     }
 
-    public class UserDto
+    public class MessageDto
     {
         public Guid Id { get; set; }
-        public required string Name { get; set; }
-        public string? UserName { get; set; }
-        public string? Email { get; set; }
-        public int? Age { get; set; }
-        public bool EmailConfirmed { get; set; }
-        public DateTime? RegistrationDate { get; set; }
-        public List<string> Roles { get; set; } = [];
+        public required string RecipientName { get; set; }
+        public required string RecipientEmail { get; set; }
+        public required string Subject { get; set; }
+        public required string Body { get; set; }
+        public DateTime SentAt { get; set; }
+        public Guid? MeetingId { get; set; }
     }
 
     public class Handler : IRequestHandler<Request, BaseApiResponse<Response>>
     {
         private readonly DatabaseContext _context;
+        private readonly CurrentUserProvider _currentUserProvider;
 
-        public Handler(DatabaseContext context)
+        public Handler(DatabaseContext context, CurrentUserProvider currentUserProvider)
         {
             _context = context;
+            _currentUserProvider = currentUserProvider;
         }
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
-            var query = _context.Users
-                .Where(u => !u.IsDeleted)
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role);
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (currentUserId == null)
+            {
+                return ApiErrors.Unauthorized.Instance;
+            }
+
+            var query = _context.Messages
+                .Include(m => m.Recipient);
 
             var total = await query.CountAsync(cancellationToken);
 
             var skip = (request.Page - 1) * request.Limit;
-            var users = await query
-                .OrderByDescending(u => u.RegistrationDate)
+            var messages = await query
+                .OrderByDescending(m => m.SentAt)
                 .Skip(skip)
                 .Take(request.Limit)
-                .Select(u => new UserDto
+                .Select(m => new MessageDto
                 {
-                    Id = u.Id,
-                    UserName = u.UserName,
-                    Email = u.Email,
-                    Age = u.Age,
-                    Name = u.Name,
-                    EmailConfirmed = u.EmailConfirmed,
-                    RegistrationDate = u.RegistrationDate,
-                    Roles = u.UserRoles.Select(ur => ur.Role.Name ?? "").ToList()
+                    Id = m.Id,
+                    RecipientName = m.Recipient.Name,
+                    RecipientEmail = m.Recipient.Email!,
+                    Subject = m.Subject,
+                    Body = m.Body,
+                    SentAt = m.SentAt,
+                    MeetingId = m.MeetingId
                 })
                 .ToListAsync(cancellationToken);
 
             var result = new PaginatedResult
             {
-                Items = users,
+                Items = messages,
                 Total = total,
                 Page = request.Page,
                 PageSize = request.Limit
