@@ -49,6 +49,7 @@ public class GetUsersForOrganizerQuery : IFeatureEndpoint
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             var users = await _context.Users
+                .Where(x => x.IsDeleted == false)
                 .Select(x => new UserModel()
                 {
                     Id = x.Id,

@@ -17,7 +17,7 @@ public interface IEmailNotificationService
     /// <summary>
     /// Отправить уведомление об обновлении встречи
     /// </summary>
-    Task SendMeetingUpdateAsync(User recipient, Meeting meeting, string changes, CancellationToken cancellationToken = default);
+    Task SendMeetingUpdateAsync(User recipient, Meeting meeting, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Отправить пользовательское сообщение
@@ -43,7 +43,7 @@ public class EmailNotificationService : IEmailNotificationService
     
     public async Task SendMeetingInvitationAsync(User recipient, Meeting meeting, CancellationToken cancellationToken = default)
     {
-        var subject = "Вы приглашены на встречу";
+        var subject = "Вы приглашены на встречу. Сіз кездесуге шақырылдыңыз.";
         var body = GenerateMeetingInvitationBody(recipient, meeting);
         
         await SendCustomMessageAsync(
@@ -54,10 +54,10 @@ public class EmailNotificationService : IEmailNotificationService
             cancellationToken);
     }
     
-    public async Task SendMeetingUpdateAsync(User recipient, Meeting meeting, string changes, CancellationToken cancellationToken = default)
+    public async Task SendMeetingUpdateAsync(User recipient, Meeting meeting, CancellationToken cancellationToken = default)
     {
-        var subject = "Встреча обновлена";
-        var body = GenerateMeetingUpdateBody(recipient, meeting, changes);
+        var subject = "Встреча обновлена. Кездесу жаңартылды.";
+        var body = GenerateMeetingUpdateBody(recipient, meeting);
         
         await SendCustomMessageAsync(
             recipient,
@@ -176,10 +176,8 @@ public class EmailNotificationService : IEmailNotificationService
 ";
     }
     
-    private string GenerateMeetingUpdateBody(User recipient, Meeting meeting, string changes)
+    private string GenerateMeetingUpdateBody(User recipient, Meeting meeting)
     {
-        var localDateTime = meeting.StartTime.AddHours(5); // Преобразуем время в местное (UTC+5)
-        var meetingDateTime = $"{localDateTime:dd.MM.yyyy HH:mm}";
         var meetingLink = $"http://localhost:3000/sessions/{meeting.Id}";
         
         return $@"
@@ -197,7 +195,6 @@ public class EmailNotificationService : IEmailNotificationService
         h2 {{ color: #2c3e50; }}
         .lang-section {{ margin-top: 30px; padding-top: 20px; border-top: 2px solid #bdc3c7; }}
         .lang-section h2 {{ color: #8e7cc3; }}
-        .changes {{ background-color: #fadbd8; padding: 10px 15px; border-left: 4px solid #e74c3c; margin: 10px 0; }}
     </style>
 </head>
 <body>
@@ -208,15 +205,7 @@ public class EmailNotificationService : IEmailNotificationService
         <div class='content'>
             <h2>Здравствуйте, {recipient.Name}!</h2>
             
-            <p>Встреча <strong>{meeting.Title}</strong> была обновлена.</p>
-            
-            <div class='changes'>
-                <p><strong>Изменения:</strong><br>{changes}</p>
-            </div>
-            
-            <p><strong>Новые данные встречи:</strong><br>
-            Дата и время: {meetingDateTime}<br>
-            Формат: {meeting.Format}</p>
+            <p>Встреча <strong>{meeting.Title}</strong> была обновлена.</p> 
             
             <a href='{meetingLink}' class='button'>Просмотреть обновленную встречу</a>
             
@@ -227,14 +216,6 @@ public class EmailNotificationService : IEmailNotificationService
             <div class='lang-section'>
                 <h2>Сәлем, {recipient.Name}!</p>
                 <p><strong>{meeting.Title}</strong> өндіктігі жаңартылды.</p>
-                
-                <div class='changes'>
-                    <p><strong>Өзгерістер:</strong><br>{changes}</p>
-                </div>
-                
-                <p><strong>Жаңа ресімінің мәліметтері:</strong><br>
-                Уақыты: {meetingDateTime}<br>
-                Формат: {meeting.Format}</p>
                 
                 <a href='{meetingLink}' class='button'>Жаңартылған ресімді көру</a>
 

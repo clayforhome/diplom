@@ -70,11 +70,16 @@ public class LoginCommand : IFeatureEndpoint
                 return ApiErrors.BadRequest.Instance;
             }
             
-            var user = await _signInManager.UserManager.FindByNameAsync(request.Login);
+            var user = await _signInManager.UserManager.FindByEmailAsync(request.Login); // FindByNameAsync
             
             if (user is null)
             {
                 return ApiErrors.Unauthorized.Instance;
+            }
+            
+            if (user.IsDeleted)
+            {
+                return ApiErrors.NotAcceptable.Instance;
             }
             
             var checkPasswordResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);

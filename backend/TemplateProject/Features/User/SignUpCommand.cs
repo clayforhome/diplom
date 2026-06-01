@@ -51,16 +51,25 @@ public class SignUpCommand : IFeatureEndpoint
         private readonly UserManager<Domain.User> _userManager;
         private readonly DatabaseContext _context;
         private readonly TimeProvider _timeProvider;
+        private readonly SignInManager<Domain.User> _signInManager;
 
-        public Handler(UserManager<Domain.User> userManager, TimeProvider timeProvider, DatabaseContext context)
+        public Handler(UserManager<Domain.User> userManager, TimeProvider timeProvider, DatabaseContext context, SignInManager<Domain.User> signInManager)
         {
             _userManager = userManager;
             _timeProvider = timeProvider;
             _context = context;
+            _signInManager = signInManager;
         }
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
+            var userCheck = await _signInManager.UserManager.FindByEmailAsync(request.Model.Email);
+            
+            if (userCheck is not null || userCheck!.IsDeleted)
+            {
+                return ApiErrors.NotAcceptable.Instance;
+            }
+            
             var user = new Domain.User
             {
                 UserName = request.Model.Email,

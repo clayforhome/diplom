@@ -59,6 +59,15 @@ public static class ApiErrors
         public override string Code => "not_found";
         public override IResult Result => Results.NotFound();
     }
+    
+    public class NotAcceptable : BaseApiError
+    {
+        public static NotAcceptable Instance { get; } = new();
+
+        public override int Status => StatusCodes.Status406NotAcceptable;
+        public override string Code => "not_acceptable";
+        public override IResult Result => Results.Problem(detail: "The request cannot be accepted.", statusCode: Status);
+    }
 
     public class BadRequest : BaseApiError
     {

@@ -70,12 +70,14 @@ public class UpdateMeetingCommand : IFeatureEndpoint
         private readonly DatabaseContext _context;
         private readonly CurrentUserProvider _currentUserProvider;
         private readonly TimeProvider _timeProvider;
+        private readonly IEmailNotificationService _emailService;
 
-        public Handler(DatabaseContext context, CurrentUserProvider currentUserProvider, TimeProvider timeProvider)
+        public Handler(DatabaseContext context, CurrentUserProvider currentUserProvider, TimeProvider timeProvider, IEmailNotificationService emailService)
         {
             _context = context;
             _currentUserProvider = currentUserProvider;
             _timeProvider = timeProvider;
+            _emailService = emailService;
         }
 
         public async Task<BaseApiResponse<Response>> Handle(Request request, CancellationToken cancellationToken)
@@ -91,6 +93,7 @@ public class UpdateMeetingCommand : IFeatureEndpoint
             var isAdmin = usersRole.UserRoles.Any(ur => string.Equals(ur.Role.Name, Role.Admin, StringComparison.Ordinal));
 
             var meeting = await _context.Meetings
+                .Include(x => x.Participants)
                 .FirstOrDefaultAsync(m => m.Id == request.Id && !m.IsDeleted, cancellationToken);
 
             if (meeting == null)
@@ -177,6 +180,26 @@ public class UpdateMeetingCommand : IFeatureEndpoint
             meeting.UpdatedAt = _timeProvider.GetUtcNow().UtcDateTime;
 
             await _context.SaveChangesAsync(cancellationToken);
+            
+            foreach (var participant in meeting.Participants)
+            {
+                // Отправить email уведомление
+                var recipientUser = await _context.Users
+                    .FindAsync([participant.UserId], cancellationToken);
+                
+                if (recipientUser != null && !recipientUser.IsDeleted)
+                {
+                    try
+                    {
+                        await _emailService.SendMeetingUpdateAsync(recipientUser, meeting, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Логирование ошибки, но процесс не прерывается
+                        System.Diagnostics.Debug.WriteLine($"Ошибка отправки email: {ex.Message}");
+                    }
+                }
+            }
 
             var dto = new MeetingDto
             {
