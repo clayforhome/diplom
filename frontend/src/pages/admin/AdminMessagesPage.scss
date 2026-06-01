@@ -1,0 +1,145 @@
+@use '../../styles/variables.scss' as *;
+
+.admin-messages-hero,
+.admin-messages-toolbar,
+.admin-message-card,
+.admin-message-card__header,
+.admin-message-card__meta,
+.admin-messages-pagination,
+.admin-messages-pagination__status {
+  display: flex;
+}
+
+.admin-messages-hero,
+.admin-messages-toolbar,
+.admin-message-card {
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+}
+
+.admin-messages-hero {
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border-radius: 1.75rem;
+}
+
+.admin-messages-hero__eyebrow {
+  color: $text-secondary;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-messages-hero h2,
+.admin-message-card h3 {
+  margin: 0.3rem 0 0;
+}
+
+.admin-messages-hero p,
+.admin-message-card p {
+  margin: 0.7rem 0 0;
+  color: $text-secondary;
+}
+
+.admin-messages-hero__meta {
+  min-width: 12rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.2rem;
+  background: linear-gradient(135deg, rgba(0, 113, 227, 0.14), rgba(96, 165, 250, 0.18));
+  text-align: center;
+}
+
+.admin-messages-hero__meta strong {
+  display: block;
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.admin-messages-toolbar {
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem;
+  border-radius: 1.5rem;
+}
+
+.admin-messages-toolbar .select-field {
+  min-width: 14rem;
+}
+
+.admin-messages-link-button {
+  padding: 0.85rem 1.05rem;
+  border-radius: 999px;
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+  font-weight: 700;
+}
+
+.admin-messages-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-message-card {
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.35rem;
+  border-radius: 1.5rem;
+}
+
+.admin-message-card__header,
+.admin-message-card__meta {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-message-card__body {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(248, 250, 252, 0.92);
+  white-space: pre-wrap;
+}
+
+.admin-message-card__meta {
+  color: $text-secondary;
+}
+
+.admin-message-card__meta a {
+  color: #0071e3;
+  font-weight: 700;
+}
+
+.admin-messages-pagination {
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.admin-messages-pagination__status {
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 5.5rem;
+}
+
+@media (max-width: 900px) {
+  .admin-messages-hero,
+  .admin-messages-toolbar,
+  .admin-message-card__header,
+  .admin-message-card__meta,
+  .admin-messages-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-messages-hero__meta,
+  .admin-messages-toolbar .select-field {
+    min-width: 0;
+  }
+}

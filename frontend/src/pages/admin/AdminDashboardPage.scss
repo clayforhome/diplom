@@ -40,7 +40,8 @@
   color: $text-secondary;
 }
 
-.admin-hero__link {
+.admin-hero__link,
+.admin-panel__link {
   padding: 0.95rem 1.15rem;
   border-radius: 999px;
   background: linear-gradient(135deg, #0071e3, #3b82f6);
@@ -48,6 +49,18 @@
   font-weight: 700;
   white-space: nowrap;
   box-shadow: 0 16px 30px rgba(0, 113, 227, 0.2);
+}
+
+.admin-hero__link--secondary,
+.admin-panel__link {
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+  box-shadow: none;
+}
+
+.admin-panel__link {
+  align-self: flex-start;
+  margin-top: 1rem;
 }
 
 .admin-grid {
