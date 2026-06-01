@@ -21,12 +21,22 @@ export function AdminDashboardPage() {
         <Link to="/admin/users" className="admin-hero__link">
           {t('adminDashboard.openUsers')}
         </Link>
+        <Link to="/admin/messages" className="admin-hero__link admin-hero__link--secondary">
+          Сообщения
+        </Link>
       </div>
 
       <div className="admin-grid">
         <section className="admin-panel">
           <h3>{t('adminDashboard.availableNow')}</h3>
           <p>{t('adminDashboard.availableNowDescription')}</p>
+        </section>
+        <section className="admin-panel">
+          <h3>Удаленные пользователи</h3>
+          <p>Открыт архив удаленных аккаунтов с восстановлением через новый backend-маршрут.</p>
+          <Link to="/admin/users/deleted" className="admin-panel__link">
+            Открыть архив
+          </Link>
         </section>
         <section className="admin-panel">
           <h3>{t('adminDashboard.limited')}</h3>

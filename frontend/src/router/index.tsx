@@ -7,6 +7,8 @@ import { SessionsPage } from '../pages/sessions/SessionsPage';
 import { SessionDetailPage } from '../pages/sessions/SessionDetailPage';
 import { ProfilePage } from '../pages/profile/ProfilePage';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
+import { AdminDeletedUsersPage } from '../pages/admin/AdminDeletedUsersPage';
+import { AdminMessagesPage } from '../pages/admin/AdminMessagesPage';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
 import { ProtectedRoute } from './ProtectedRoute';
 
@@ -56,6 +58,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['Admin']}>
             <AdminUsersPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'admin/users/deleted',
+        element: (
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AdminDeletedUsersPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'admin/messages',
+        element: (
+          <ProtectedRoute allowedRoles={['Admin', 'Organizer']}>
+            <AdminMessagesPage />
           </ProtectedRoute>
         )
       }

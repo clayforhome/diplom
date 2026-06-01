@@ -225,10 +225,10 @@ export function AdminUsersPage() {
     const usersExceptCurrent = users.filter((user) => user.id !== currentUser?.id);
     const searchedUsers = query
       ? usersExceptCurrent.filter((user) =>
-          [getDisplayName(user.name, user.userName, user.email), user.name, user.userName, user.email, user.age, user.registrationDate ? formatDate(user.registrationDate) : null, user.id]
-            .map((value) => normalizeValue(value))
-            .some((value) => value.includes(query))
-        )
+        [getDisplayName(user.name, user.userName, user.email), user.name, user.userName, user.email, user.age, user.registrationDate ? formatDate(user.registrationDate) : null, user.id]
+          .map((value) => normalizeValue(value))
+          .some((value) => value.includes(query))
+      )
       : usersExceptCurrent;
 
     return [...searchedUsers].sort((left, right) => {

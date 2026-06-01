@@ -215,6 +215,27 @@ export interface AdminUser {
   registrationDate: string | null;
 }
 
+export interface DeletedUser {
+  id: string;
+  name: string;
+  userName: string | null;
+  email: string | null;
+  age: number | null;
+  deletedAt: string | null;
+  deletedByName: string | null;
+  deletedBy: string | null;
+}
+
+export interface MessageItem {
+  id: string;
+  recipientName: string;
+  recipientEmail: string;
+  subject: string;
+  body: string;
+  sentAt: string;
+  meetingId: string | null;
+}
+
 export interface GetRolesResponseData {
   roles: string[];
 }
@@ -228,6 +249,10 @@ export interface UpdateUserRolesRequest {
 }
 
 export interface UpdateUserRolesResponseData {
+  message: string;
+}
+
+export interface RestoreUserResponseData {
   message: string;
 }
 
