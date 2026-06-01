@@ -77,7 +77,7 @@ export function AdminMessagesPage() {
       </div>
 
       {error ? <EmptyState title="Не удалось загрузить сообщения" description={error} /> : null}
-      {!error && !isLoading && messages.length === 0 ? <EmptyState title="Сообщений пока нет" /> : null}
+      {!error && !isLoading && messages.length === 0 ? <EmptyState title="Сообщений пока нет" description='' /> : null}
 
       <div className="admin-messages-list">
         {messages.map((message) => (
