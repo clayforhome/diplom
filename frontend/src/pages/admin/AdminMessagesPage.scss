@@ -99,10 +99,34 @@
 }
 
 .admin-message-card__body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
   padding: 1rem;
   border-radius: 1rem;
   background: rgba(248, 250, 252, 0.92);
-  white-space: pre-wrap;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.admin-message-card__body-column {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.admin-message-card__body-label {
+  color: $text-secondary;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-message-card__body p {
+  margin: 0;
+  color: $text-primary;
+  line-height: 1.5;
 }
 
 .admin-message-card__meta {
@@ -141,5 +165,9 @@
   .admin-messages-hero__meta,
   .admin-messages-toolbar .select-field {
     min-width: 0;
+  }
+
+  .admin-message-card__body {
+    grid-template-columns: 1fr;
   }
 }

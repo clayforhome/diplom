@@ -13,7 +13,7 @@ import { usersService } from '../../http/usersService';
 import { useToast } from '../../hooks/useToast';
 import { useUiSelectOptions } from '../../hooks/useUiSelectOptions';
 import { useAppSelector } from '../../store/hooks';
-import type { AdminUser } from '../../types';
+import type { AdminUser, DeletedUser } from '../../types';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getProfileInitials } from '../../utils/profile';
 import { getUserRoleLabel } from '../../utils/userLabels';
@@ -21,6 +21,8 @@ import './AdminUsersPage.scss';
 
 type SortKey = 'name' | 'userName' | 'email' | 'age' | 'registrationDate' | 'id';
 type SortDirection = 'asc' | 'desc';
+type UserViewMode = 'active' | 'deleted';
+type DisplayUser = (AdminUser & { isDeleted: false }) | (DeletedUser & { isDeleted: true });
 
 const ROLE_TONES: Record<string, 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
   Admin: 'danger',
@@ -149,7 +151,8 @@ export function AdminUsersPage() {
   const currentUser = useAppSelector((state) => state.auth.user);
   const { t, i18n } = useTranslation();
   const toast = useToast();
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [users, setUsers] = useState<DisplayUser[]>([]);
+  const [viewMode, setViewMode] = useState<UserViewMode>('active');
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -157,7 +160,9 @@ export function AdminUsersPage() {
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [activeResetUserId, setActiveResetUserId] = useState<string | null>(null);
   const [activeDeleteUserId, setActiveDeleteUserId] = useState<string | null>(null);
+  const [activeRestoreUserId, setActiveRestoreUserId] = useState<string | null>(null);
   const [pendingDeleteUser, setPendingDeleteUser] = useState<AdminUser | null>(null);
+  const [pendingRestoreUser, setPendingRestoreUser] = useState<DeletedUser | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [total, setTotal] = useState(0);
@@ -208,24 +213,44 @@ export function AdminUsersPage() {
     setIsLoading(true);
     setError(null);
 
-    usersService
-      .listUsers(page, pageSize)
+    const request =
+      viewMode === 'deleted'
+        ? usersService.listDeletedUsers(page, pageSize).then((response) => ({
+            ...response,
+            items: response.items.map((user) => ({ ...user, isDeleted: true as const }))
+          }))
+        : usersService.listUsers(page, pageSize).then((response) => ({
+            ...response,
+            items: response.items.map((user) => ({ ...user, isDeleted: false as const }))
+          }));
+
+    request
       .then((response) => {
         setUsers(response.items);
         setTotal(response.total);
         setPage(response.page);
         setPageSize(response.pageSize);
       })
-      .catch(() => setError(t('adminUsers.loadUsersError')))
+      .catch(() => setError(viewMode === 'deleted' ? t('adminUsers.loadDeletedUsersError') : t('adminUsers.loadUsersError')))
       .finally(() => setIsLoading(false));
-  }, [page, pageSize, t]);
+  }, [page, pageSize, t, viewMode]);
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
     const usersExceptCurrent = users.filter((user) => user.id !== currentUser?.id);
     const searchedUsers = query
       ? usersExceptCurrent.filter((user) =>
-        [getDisplayName(user.name, user.userName, user.email), user.name, user.userName, user.email, user.age, user.registrationDate ? formatDate(user.registrationDate) : null, user.id]
+        [
+          getDisplayName(user.name, user.userName, user.email),
+          user.name,
+          user.userName,
+          user.email,
+          user.age,
+          'registrationDate' in user && user.registrationDate ? formatDate(user.registrationDate) : null,
+          user.isDeleted && user.deletedAt ? formatDate(user.deletedAt) : null,
+          user.isDeleted ? user.deletedByName : null,
+          user.id
+        ]
           .map((value) => normalizeValue(value))
           .some((value) => value.includes(query))
       )
@@ -239,13 +264,21 @@ export function AdminUsersPage() {
       }
 
       if (sortKey === 'registrationDate') {
-        const leftDate = left.registrationDate ? new Date(left.registrationDate).getTime() : 0;
-        const rightDate = right.registrationDate ? new Date(right.registrationDate).getTime() : 0;
+        const leftSource = left.isDeleted ? left.deletedAt : left.registrationDate;
+        const rightSource = right.isDeleted ? right.deletedAt : right.registrationDate;
+        const leftDate = leftSource ? new Date(leftSource).getTime() : 0;
+        const rightDate = rightSource ? new Date(rightSource).getTime() : 0;
         return (leftDate - rightDate) * direction;
       }
 
-      const leftValue = sortKey === 'name' ? getDisplayName(left.name, left.userName, left.email) : normalizeValue(left[sortKey]);
-      const rightValue = sortKey === 'name' ? getDisplayName(right.name, right.userName, right.email) : normalizeValue(right[sortKey]);
+      const leftValue =
+        sortKey === 'name'
+          ? getDisplayName(left.name, left.userName, left.email)
+          : normalizeValue(left[sortKey]);
+      const rightValue =
+        sortKey === 'name'
+          ? getDisplayName(right.name, right.userName, right.email)
+          : normalizeValue(right[sortKey]);
 
       return leftValue.localeCompare(rightValue, i18n.resolvedLanguage === 'kk' ? 'kk' : 'ru') * direction;
     });
@@ -253,21 +286,37 @@ export function AdminUsersPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const reloadUsers = async (nextPage = page, nextPageSize = pageSize) => {
+  const reloadUsers = async (nextPage = page, nextPageSize = pageSize, nextViewMode = viewMode) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await usersService.listUsers(nextPage, nextPageSize);
+      const response =
+        nextViewMode === 'deleted'
+          ? await usersService.listDeletedUsers(nextPage, nextPageSize).then((data) => ({
+              ...data,
+              items: data.items.map((user) => ({ ...user, isDeleted: true as const }))
+            }))
+          : await usersService.listUsers(nextPage, nextPageSize).then((data) => ({
+              ...data,
+              items: data.items.map((user) => ({ ...user, isDeleted: false as const }))
+            }));
+
       setUsers(response.items);
       setTotal(response.total);
       setPage(response.page);
       setPageSize(response.pageSize);
     } catch {
-      setError(t('adminUsers.loadUsersError'));
+      setError(nextViewMode === 'deleted' ? t('adminUsers.loadDeletedUsersError') : t('adminUsers.loadUsersError'));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleViewModeChange = (nextViewMode: UserViewMode) => {
+    setViewMode(nextViewMode);
+    setSearch('');
+    setPage(1);
   };
 
   const handleResetPassword = async (userId: string) => {
@@ -310,6 +359,24 @@ export function AdminUsersPage() {
     }
   };
 
+  const handleRestoreUser = async (user: DeletedUser) => {
+    setActiveRestoreUserId(user.id);
+
+    try {
+      await usersService.restoreUser(user.id);
+      setPendingRestoreUser(null);
+      toast(t('adminUsers.accountRestored'), 'success');
+
+      const nextTotal = Math.max(0, total - 1);
+      const nextTotalPages = Math.max(1, Math.ceil(nextTotal / pageSize));
+      await reloadUsers(Math.min(page, nextTotalPages), pageSize, 'deleted');
+    } catch (error) {
+      toast(error instanceof ApiError ? error.message : t('adminUsers.accountRestoreError'), 'error');
+    } finally {
+      setActiveRestoreUserId(null);
+    }
+  };
+
   return (
     <PageSection title={t('adminUsers.title')} subtitle={t('adminUsers.subtitle')}>
       <div className="admin-users-hero">
@@ -320,8 +387,17 @@ export function AdminUsersPage() {
         </div>
         <div className="admin-users-hero__meta">
           <strong>{total}</strong>
-          <span>{t('adminUsers.totalUsers')}</span>
+          <span>{viewMode === 'deleted' ? t('adminUsers.deletedUsersTotal') : t('adminUsers.totalUsers')}</span>
         </div>
+      </div>
+
+      <div className="admin-users-tabs" role="tablist" aria-label={t('adminUsers.userStateFilter')}>
+        <button type="button" className={viewMode === 'active' ? 'admin-users-tabs__button admin-users-tabs__button--active' : 'admin-users-tabs__button'} onClick={() => handleViewModeChange('active')}>
+          {t('adminUsers.activeUsersTab')}
+        </button>
+        <button type="button" className={viewMode === 'deleted' ? 'admin-users-tabs__button admin-users-tabs__button--active' : 'admin-users-tabs__button'} onClick={() => handleViewModeChange('deleted')}>
+          {t('adminUsers.deletedUsersTab')}
+        </button>
       </div>
 
       <div className="admin-users-toolbar">
@@ -344,7 +420,12 @@ export function AdminUsersPage() {
       </div>
 
       {error ? <EmptyState title={t('adminUsers.loadUsersTitle')} description={error} /> : null}
-      {!error && !isLoading && filteredUsers.length === 0 ? <EmptyState title={t('adminUsers.noMatchesTitle')} description={t('adminUsers.noMatchesDescription')} /> : null}
+      {!error && !isLoading && filteredUsers.length === 0 ? (
+        <EmptyState
+          title={viewMode === 'deleted' ? t('adminUsers.deletedNoMatchesTitle') : t('adminUsers.noMatchesTitle')}
+          description={viewMode === 'deleted' ? t('adminUsers.deletedNoMatchesDescription') : t('adminUsers.noMatchesDescription')}
+        />
+      ) : null}
 
       <div className="admin-users-page-meta">
         <span>{t('adminUsers.pageOf', { page, total: totalPages })}</span>
@@ -365,6 +446,14 @@ export function AdminUsersPage() {
             </div>
 
             <div className="admin-user-card__facts">
+              {user.isDeleted ? (
+                <div>
+                  <span>{t('adminUsers.statusField')}</span>
+                  <strong>
+                    <Badge tone="danger">{t('adminUsers.deletedStatus')}</Badge>
+                  </strong>
+                </div>
+              ) : null}
               <div>
                 <span>{t('adminUsers.fullNameField')}</span>
                 <strong>{user.userName ?? t('common.notSpecifiedNeutral')}</strong>
@@ -374,33 +463,55 @@ export function AdminUsersPage() {
                 <strong>{user.age ?? t('common.notSpecifiedNeutral')}</strong>
               </div>
               <div>
-                <span>{t('adminUsers.registrationField')}</span>
-                <strong>{user.registrationDate ? formatDate(user.registrationDate) : t('common.unknown')}</strong>
+                <span>{user.isDeleted ? t('adminUsers.deletionDateField') : t('adminUsers.registrationField')}</span>
+                <strong>
+                  {user.isDeleted
+                    ? user.deletedAt
+                      ? formatDate(user.deletedAt)
+                      : t('common.unknown')
+                    : user.registrationDate
+                      ? formatDate(user.registrationDate)
+                      : t('common.unknown')}
+                </strong>
               </div>
+              {user.isDeleted ? (
+                <div>
+                  <span>{t('adminUsers.deletedByField')}</span>
+                  <strong>{user.deletedByName ?? user.deletedBy ?? t('common.unknown')}</strong>
+                </div>
+              ) : null}
               <div>
                 <span>ID</span>
                 <strong>{user.id}</strong>
               </div>
             </div>
 
-            <UserRolesPanel userId={user.id} allRoles={allRoles} />
+            {!user.isDeleted ? <UserRolesPanel userId={user.id} allRoles={allRoles} /> : null}
 
             <div className="admin-user-card__actions">
-              <Input
-                label={t('adminUsers.resetPasswordLabel')}
-                type="password"
-                value={resetPasswords[user.id] ?? ''}
-                onChange={(event) => setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))}
-                placeholder={t('adminUsers.resetPasswordPlaceholder')}
-              />
-              <div className="admin-user-card__buttons">
-                <Button variant="secondary" onClick={() => void handleResetPassword(user.id)} disabled={activeResetUserId === user.id}>
-                  {t('adminUsers.resetPasswordButton')}
+              {user.isDeleted ? (
+                <Button variant="primary" onClick={() => setPendingRestoreUser(user)} disabled={activeRestoreUserId === user.id}>
+                  {t('adminUsers.restoreAccountButton')}
                 </Button>
-                <Button variant="danger" onClick={() => setPendingDeleteUser(user)} disabled={activeDeleteUserId === user.id}>
-                  {t('adminUsers.deleteAccountButton')}
-                </Button>
-              </div>
+              ) : (
+                <>
+                  <Input
+                    label={t('adminUsers.resetPasswordLabel')}
+                    type="password"
+                    value={resetPasswords[user.id] ?? ''}
+                    onChange={(event) => setResetPasswords((current) => ({ ...current, [user.id]: event.target.value }))}
+                    placeholder={t('adminUsers.resetPasswordPlaceholder')}
+                  />
+                  <div className="admin-user-card__buttons">
+                    <Button variant="secondary" onClick={() => void handleResetPassword(user.id)} disabled={activeResetUserId === user.id}>
+                      {t('adminUsers.resetPasswordButton')}
+                    </Button>
+                    <Button variant="danger" onClick={() => setPendingDeleteUser(user)} disabled={activeDeleteUserId === user.id}>
+                      {t('adminUsers.deleteAccountButton')}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </article>
         ))}
@@ -432,6 +543,19 @@ export function AdminUsersPage() {
         isConfirming={activeDeleteUserId !== null}
         onConfirm={() => pendingDeleteUser && void handleDeleteUser(pendingDeleteUser.id)}
         onCancel={() => setPendingDeleteUser(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={pendingRestoreUser !== null}
+        title={t('adminUsers.restoreAccountTitle')}
+        description={t('adminUsers.restoreAccountDescription', {
+          name: getDisplayName(pendingRestoreUser?.name ?? null, pendingRestoreUser?.userName ?? null, pendingRestoreUser?.email ?? null)
+        })}
+        confirmLabel={t('adminUsers.restore')}
+        cancelLabel={t('common.cancel')}
+        isConfirming={activeRestoreUserId !== null}
+        onConfirm={() => pendingRestoreUser && void handleRestoreUser(pendingRestoreUser)}
+        onCancel={() => setPendingRestoreUser(null)}
       />
     </PageSection>
   );

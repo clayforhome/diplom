@@ -22,7 +22,7 @@ export function AdminDashboardPage() {
           {t('adminDashboard.openUsers')}
         </Link>
         <Link to="/admin/messages" className="admin-hero__link admin-hero__link--secondary">
-          Сообщения
+          {t('adminDashboard.openMessages')}
         </Link>
       </div>
 
@@ -32,10 +32,10 @@ export function AdminDashboardPage() {
           <p>{t('adminDashboard.availableNowDescription')}</p>
         </section>
         <section className="admin-panel">
-          <h3>Удаленные пользователи</h3>
-          <p>Открыт архив удаленных аккаунтов с восстановлением через новый backend-маршрут.</p>
+          <h3>{t('adminDashboard.deletedUsers')}</h3>
+          <p>{t('adminDashboard.deletedUsersDescription')}</p>
           <Link to="/admin/users/deleted" className="admin-panel__link">
-            Открыть архив
+            {t('adminDashboard.openArchive')}
           </Link>
         </section>
         <section className="admin-panel">

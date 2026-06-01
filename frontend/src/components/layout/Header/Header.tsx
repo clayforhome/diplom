@@ -43,7 +43,7 @@ export function Header() {
         <NavLink to="/sessions">{t('nav.meetings')}</NavLink>
         <NavLink to="/profile">{t('nav.profile')}</NavLink>
         {roles.includes('Admin') ? <NavLink to="/admin/users">{t('nav.users')}</NavLink> : null}
-        {roles.includes('Admin') || roles.includes('Organizer') ? <NavLink to="/admin/messages">Сообщения</NavLink> : null}
+        {roles.includes('Admin') || roles.includes('Organizer') ? <NavLink to="/admin/messages">{t('nav.messages')}</NavLink> : null}
       </nav>
       <div className="app-header__actions">
         <LanguageSwitcher />
