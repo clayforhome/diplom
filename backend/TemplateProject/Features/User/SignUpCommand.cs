@@ -65,7 +65,7 @@ public class SignUpCommand : IFeatureEndpoint
         {
             var userCheck = await _signInManager.UserManager.FindByEmailAsync(request.Model.Email);
             
-            if (userCheck is not null || userCheck!.IsDeleted)
+            if (userCheck is not null)
             {
                 return ApiErrors.NotAcceptable.Instance;
             }
