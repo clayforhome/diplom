@@ -178,6 +178,8 @@ public class EmailNotificationService : IEmailNotificationService
     
     private string GenerateMeetingUpdateBody(User recipient, Meeting meeting)
     {
+        var localDateTime = meeting.StartTime.AddHours(5); // Преобразуем время в местное (UTC+5)
+        var meetingDateTime = $"{localDateTime:dd.MM.yyyy HH:mm}";
         var meetingLink = $"http://localhost:3000/sessions/{meeting.Id}";
         
         return $@"
@@ -194,18 +196,28 @@ public class EmailNotificationService : IEmailNotificationService
         .footer {{ margin-top: 20px; color: #7f8c8d; font-size: 12px; }}
         h2 {{ color: #2c3e50; }}
         .lang-section {{ margin-top: 30px; padding-top: 20px; border-top: 2px solid #bdc3c7; }}
-        .lang-section h2 {{ color: #8e7cc3; }}
+        .lang-section h2 {{ color: #2c3e50; }}
     </style>
 </head>
 <body>
     <div class='container'>
         <div class='header'>
-            <h1>⚠️ Встреча обновлена</h1>
+            <h1>Встреча обновлена</h1>
+            <h1>Кездесу жаңартылды</h1>
         </div>
         <div class='content'>
             <h2>Здравствуйте, {recipient.Name}!</h2>
             
             <p>Встреча <strong>{meeting.Title}</strong> была обновлена.</p> 
+
+            <p><strong>Дата и время:</strong> {meetingDateTime}</p>
+            <p><strong>Формат:</strong> {meeting.Format}</p>
+            
+            {(meeting.Location != null ? $"<p><strong>Место проведения:</strong> {meeting.Location}</p>" : "")}
+            {(meeting.MeetingLink != null ? $"<p><strong>Ссылка на встречу:</strong> <a href='{meeting.MeetingLink}'>{meeting.MeetingLink}</a></p>" : "")}
+            {(meeting.ContactInfo != null ? $"<p><strong>Контактная информация:</strong> {meeting.ContactInfo}</p>" : "")}
+            
+            {(meeting.Description != null ? $"<p><strong>Описание:</strong> {meeting.Description}</p>" : "")}
             
             <a href='{meetingLink}' class='button'>Просмотреть обновленную встречу</a>
             
@@ -216,6 +228,15 @@ public class EmailNotificationService : IEmailNotificationService
             <div class='lang-section'>
                 <h2>Сәлем, {recipient.Name}!</p>
                 <p><strong>{meeting.Title}</strong> өндіктігі жаңартылды.</p>
+
+                <p><strong>Уақыты:</strong> {meetingDateTime}</p>
+                <p><strong>Формат:</strong> {meeting.Format}</p>
+                
+                {(meeting.Location != null ? $"<p><strong>Орны:</strong> {meeting.Location}</p>" : "")}
+                {(meeting.MeetingLink != null ? $"<p><strong>Сілтеме:</strong> <a href='{meeting.MeetingLink}'>{meeting.MeetingLink}</a></p>" : "")}
+                {(meeting.ContactInfo != null ? $"<p><strong>Байланыс ақпараты:</strong> {meeting.ContactInfo}</p>" : "")}
+                
+                {(meeting.Description != null ? $"<p><strong>Сипаттама:</strong> {meeting.Description}</p>" : "")}
                 
                 <a href='{meetingLink}' class='button'>Жаңартылған ресімді көру</a>
 
