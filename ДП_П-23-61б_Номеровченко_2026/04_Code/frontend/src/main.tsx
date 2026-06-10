@@ -1,0 +1,27 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { RouterProvider } from 'react-router-dom';
+import { GlobalLoader } from './components/ui/GlobalLoader/GlobalLoader';
+import { ToastViewport } from './components/ui/ToastViewport/ToastViewport';
+import { configureHttpClientActivityHandlers } from './http/httpClient';
+import './i18n';
+import { router } from './router';
+import { store } from './store';
+import { beginRequest, endRequest } from './store/slices/uiSlice';
+import './styles/global.scss';
+
+configureHttpClientActivityHandlers({
+  onRequestStart: () => store.dispatch(beginRequest()),
+  onRequestEnd: () => store.dispatch(endRequest())
+});
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <GlobalLoader />
+      <ToastViewport />
+      <RouterProvider router={router} />
+    </Provider>
+  </React.StrictMode>
+);

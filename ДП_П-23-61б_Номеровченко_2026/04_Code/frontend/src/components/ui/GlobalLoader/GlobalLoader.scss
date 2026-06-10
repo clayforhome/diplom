@@ -1,0 +1,52 @@
+@use '../../../styles/variables.scss' as *;
+
+.global-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.global-loader--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.global-loader__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(248, 250, 252, 0.68);
+  backdrop-filter: blur(8px);
+}
+
+.global-loader__panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 11rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.24);
+}
+
+.global-loader__panel .spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: rgba(255, 255, 255, 0.22);
+  border-top-color: #f8fafc;
+}
+
+.global-loader__label {
+  color: #f8fafc;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}

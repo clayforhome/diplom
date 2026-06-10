@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": { "Database": "Host=localhost;Port=5432;Database=meetings_db;Username=postgres;Password=ВАШ_ПАРОЛЬ" },
+  "Auth": { "Key": "СЛУЧАЙНАЯ_СТРОКА_НЕ_МЕНЕЕ_32_СИМВОЛОВ", "Issuer": "https://localhost:7262", "Audience": "https://localhost:3000", "Lifetime": "05:00:00" },
+  "Smtp": { "Host": "smtp.example.com", "Port": 587, "Username": "ВАШ_ЛОГИН", "Password": "ВАШ_ПАРОЛЬ" }
+}
