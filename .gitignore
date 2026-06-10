@@ -10,3 +10,12 @@ appsettings.Development.json
 *.sln.DotSettings.user
 
 env.local
+
+# AI tooling / agents
+.claude/
+.agents/
+.cursor/
+.aider*
+**/AGENTS.md
+CLAUDE.md
+skills-lock.json
