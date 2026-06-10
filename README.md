@@ -179,7 +179,7 @@ npm run dev
 ```powershell
 # 1) Запустить PostgreSQL (служба)
 # 2) Настроить appsettings.Development.json (строка подключения и credentials)
-cd C:\Users\damir\RiderProjects\meetings-sign\backend\TemplateProject
+cd C:\Users\User\RiderProjects\meetings-sign\backend\TemplateProject
 dotnet restore
 dotnet ef database update
 dotnet run
